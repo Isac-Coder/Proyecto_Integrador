@@ -1,0 +1,288 @@
+/* src/styles/paciente.css */
+
+:root {
+    --primary-zoe-dark: #1b4332;  /* El verde oscuro principal de tu paleta original */
+    --primary-zoe-salvia: #40916c;/* Verde vivo/salvia para diferenciar al Cuidador */
+    --accent-terracota: #cf8a72;  /* Terracota para acentos cálidos y botones */
+    --light-bg: #f4f3ef;          /* Fondo crema suave oficial */
+    --white: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+body {
+    margin: 0;
+    background-color: var(--light-bg);
+}
+
+.fade-in {
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.dashboard-layout {
+    display: flex;
+    min-height: 100vh;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--light-bg);
+}
+
+/* --- SIDEBAR RE-ALINEADO A LA MARCA --- */
+.sidebar {
+    width: 260px;
+    background-color: var(--white);
+    padding: 30px 20px;
+    border-right: 1px solid #eef2f6;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 40px;
+    padding-left: 12px;
+}
+
+/* Aplicación de colores corporativos en los logotipos */
+.sidebar-profesional .sidebar-logo { color: var(--primary-zoe-dark); }
+.sidebar-cuidador .sidebar-logo { color: var(--primary-zoe-salvia); }
+
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+}
+
+/* MENÚ INTERACTIVO SELECCIONADO POR ROL (Misma paleta, pesos diferentes) */
+.sidebar-profesional .menu-item:hover, 
+.sidebar-profesional .menu-item.active {
+    background-color: var(--primary-zoe-dark) !important;
+    color: var(--white) !important;
+}
+
+.sidebar-cuidador .menu-item:hover, 
+.sidebar-cuidador .menu-item.active {
+    background-color: var(--primary-zoe-salvia) !important;
+    color: var(--white) !important;
+}
+
+.logout-item {
+    margin-top: auto;
+    color: #ef4444 !important;
+}
+.logout-item:hover {
+    background-color: #fef2f2 !important;
+}
+
+/* --- CONTENEDOR PRINCIPAL --- */
+.dashboard-main {
+    flex: 1;
+    padding: 40px;
+    overflow-y: auto;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.welcome-text h2 {
+    margin: 0 0 4px 0;
+    font-size: 1.6rem;
+    color: var(--text-main);
+}
+
+.welcome-text .current-date {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.header-search input {
+    padding: 10px 16px;
+    width: 280px;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    outline: none;
+    font-size: 0.9rem;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    background-color: #e5e2da;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+/* --- DISTRIBUCIÓN GRID --- */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1.8fr 1.2fr;
+    gap: 30px;
+}
+
+.card {
+    background-color: var(--white);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow-soft);
+    margin-bottom: 24px;
+    transition: transform 0.2s ease;
+}
+.card:hover {
+    transform: translateY(-2px);
+}
+
+/* Tarjetas principales adaptadas a la paleta unificada */
+.sidebar-profesional ~ .dashboard-main .next-appointment-card {
+    background-color: var(--primary-zoe-dark);
+    color: var(--white);
+}
+
+.sidebar-cuidador ~ .dashboard-main .card-main-cuidador {
+    background-color: var(--primary-zoe-salvia);
+    color: var(--white);
+}
+
+.card h3 {
+    font-size: 0.85rem;
+    letter-spacing: 1.2px;
+    margin: 0 0 16px 0;
+    text-transform: uppercase;
+    opacity: 0.9;
+}
+
+.doctor-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.doctor-avatar {
+    width: 48px;
+    height: 48px;
+    background-color: rgba(255,255,255,0.2);
+    border-radius: 50%;
+}
+
+.appointment-date {
+    display: flex;
+    gap: 20px;
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+}
+
+.card-actions button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+.btn-reprogramar {
+    background-color: transparent;
+    border: 1px solid white;
+    color: white;
+    margin-right: 10px;
+}
+.btn-detalles {
+    background-color: var(--white);
+    color: var(--primary-zoe-dark);
+}
+.sidebar-cuidador ~ .dashboard-main .btn-detalles {
+    color: var(--primary-zoe-salvia);
+}
+
+/* --- SIGNOS VITALES CON BORDES CREATIVOS --- */
+.vitals-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.vital-card {
+    background-color: var(--white);
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: var(--shadow-soft);
+    border-left: 5px solid transparent;
+}
+
+.vital-glucose { border-left-color: #60a5fa; }
+.vital-heart { border-left-color: #f87171; }
+.vital-oxygen { border-left-color: #34d399; }
+.vital-pressure { border-left-color: #fbbf24; }
+
+.vital-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+.vital-label {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-top: 4px;
+}
+
+/* --- BARRAS DE PROGRESO --- */
+.progress-bar-container {
+    background-color: #e2e8f0;
+    border-radius: 10px;
+    height: 8px;
+    overflow: hidden;
+    margin: 12px 0;
+}
+.progress-bar {
+    background-color: var(--accent-terracota);
+    height: 100%;
+    border-radius: 10px;
+}
+
+.progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* --- LISTAS DE ACCIONES --- */
+.actions-list { list-style: none; padding: 0; margin: 0; }
+.actions-list li {
+    padding: 16px 0;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+.arrow { color: var(--text-muted); }
