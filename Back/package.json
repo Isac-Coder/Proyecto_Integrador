@@ -1,0 +1,16 @@
+{
+  "name": "zoecare-backend",
+  "version": "1.0.0",
+  "description": "Backend para el proyecto integrador ZoeCare",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.4",
+    "dotenv": "^16.4.1",
+    "express": "^4.19.0",
+    "pg": "^8.2.0"
+  }
+}

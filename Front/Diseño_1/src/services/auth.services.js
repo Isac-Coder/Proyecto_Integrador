@@ -1,29 +1,31 @@
 // src/services/auth.services.js
 
-export function autenticarUsuario(email, password) {
+const API_URL = 'http://localhost:3001/api';
+
+export async function autenticarUsuario(email, password) {
     const correo = email.toLowerCase().trim();
 
-    // 1. Cuentas maestras por defecto fijas en el código
-    if (correo === 'profesional@zoecare.com' && password === '1234') {
-        return { nombre: 'Jack (Especialista)', rol: 'profesional', token: 'jwt-fijo-prof' };
-    }
-    if (correo === 'cuidador@zoecare.com' && password === '1234') {
-        return { nombre: 'Juana Pérez', rol: 'cuidador', token: 'jwt-fijo-cuid' };
-    }
+    try {
+        const response = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: correo, password })
+        });
 
-    // 2. 🔍 BUSQUEDA DINÁMICA EN LOS USUARIOS REGISTRADOS EN LOCALSTORAGE
-    const usuariosEnMemoria = JSON.parse(localStorage.getItem('usuarios_db')) || [];
-    
-    // Buscamos si existe algún usuario que coincida con el correo y contraseña ingresados
-    const usuarioEncontrado = usuariosEnMemoria.find(user => user.email.toLowerCase().trim() === correo && user.password === password);
+        const data = await response.json();
 
-    if (usuarioEncontrado) {
+        if (!response.ok || !data.success) {
+            return null;
+        }
+
         return {
-            nombre: usuarioEncontrado.nombre,
-            rol: usuarioEncontrado.rol,
-            token: 'jwt-dinamico-' + Math.random().toString(36).substr(2, 9) // Genera un token aleatorio simulado
+            nombre: data.user?.nombre || data.user?.email,
+            rol: data.user?.rol,
+            token: data.token,
+            email: data.user?.email
         };
+    } catch (error) {
+        console.error('Error al autenticar con el backend:', error);
+        return null;
     }
-
-    return null; // Credenciales inválidas si no se encuentra en ningún lado
 }

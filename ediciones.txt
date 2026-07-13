@@ -1,0 +1,84 @@
+Informe técnico de cambios realizados
+===================================
+
+Este documento describe de forma clara y organizada los cambios incorporados durante esta sesión en el proyecto, con el objetivo de que otros desarrolladores puedan comprender rápidamente qué se modificó, por qué y cómo se integra con el resto del sistema.
+
+1. Objetivo general
+-----------------
+Se estableció la base funcional del backend y se integró con el frontend para que el sistema deje de depender únicamente de lógica local y pueda consumir información a través de una API. Asimismo, se preparó la configuración para trabajar con PostgreSQL.
+
+2. Cambios realizados en el backend
+-----------------------------------
+
+2.1. Estructura inicial del servidor
+- Se creó la estructura base del backend dentro de la carpeta Back.
+- Se implementó un servidor Express que permite recibir solicitudes HTTP desde el frontend.
+- Se definieron puntos de entrada principales para la API.
+
+2.2. Rutas implementadas
+Se añadieron rutas para manejar autenticación y acceso a datos:
+- POST /api/auth/login: permite autenticar usuarios con correo y contraseña.
+- POST /api/auth/register: permite registrar nuevos usuarios.
+- GET /api/auth/me: devuelve información del usuario autenticado a partir del token.
+- GET /api/data/dashboard/:rol: devuelve la estructura general del dashboard según el rol.
+- GET /api/data/sections/:rol/:seccion: devuelve el contenido de una sección específica del panel.
+
+2.3. Controladores
+- Se creó un controlador de autenticación para gestionar login, registro y validación de sesión.
+- Se creó un controlador de datos para entregar información de secciones del dashboard según el rol del usuario.
+
+2.4. Configuración de base de datos
+- Se configuró la conexión del backend para trabajar con PostgreSQL mediante el paquete pg.
+- Se añadieron variables de entorno esperadas para conectar con la base de datos:
+  - DB_HOST
+  - DB_PORT
+  - DB_USER
+  - DB_PASSWORD
+  - DB_NAME
+- Si estas variables no están completas, el sistema mantiene un modo de respaldo en memoria para no interrumpir el desarrollo.
+
+3. Cambios realizados en el frontend
+-----------------------------------
+
+3.1. Integración con el backend
+- Se modificó el flujo de autenticación para que el frontend consulte el backend en vez de validar credenciales únicamente en memoria.
+- Se implementó fetch para enviar las credenciales al endpoint de login.
+
+3.2. Carga dinámica de contenido
+- Se adaptaron las vistas del profesional y del cuidador para mostrar contenido dinámico proveniente de la API.
+- Al seleccionar una sección del menú, la app consulta el backend y renderiza la información correspondiente.
+
+3.3. Cambios en la URL de conexión
+- Se estableció la base de la API en http://localhost:3001/api para que el frontend se conecte al backend correctamente.
+- Este cambio se aplicó en los servicios encargados de autenticación y manejo de datos.
+
+3.4. Compatibilidad con la interfaz existente
+- Se preservó la estructura visual y la experiencia del usuario.
+- No se modificó el diseño general del frontend, únicamente se conectó la lógica al backend.
+
+4. Archivos modificados
+-----------------------
+
+Backend:
+- Back/package.json
+- Back/src/app.js
+- Back/src/server.js
+- Back/src/controllers/auth.controller.js
+- Back/src/controllers/data.controller.js
+- Back/src/routes/auth.routes.js
+- Back/src/routes/data.routes.js
+- Back/src/config/database.js
+
+Frontend:
+- Front/Diseño_1/src/services/auth.services.js
+- Front/Diseño_1/src/services/data.service.js
+- Front/Diseño_1/src/views/loginView.js
+- Front/Diseño_1/src/views/medicoView.js
+- Front/Diseño_1/src/views/cuidadorView.js
+
+5. Cómo probar el sistema
+-------------------------
+- Iniciar el backend en el puerto 3001.
+- Asegurarse de que el archivo Back/.env contenga la configuración correcta de PostgreSQL o de que el sistema pueda funcionar en modo respaldo.
+- Abrir el frontend en el navegador y probar el flujo de login.
+- Navegar por las secciones del profesional o cuidador para confirmar que los datos se cargan desde la API.

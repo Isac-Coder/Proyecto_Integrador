@@ -101,7 +101,7 @@ function initCuidadorEvents(baseHtml) {
     if (!contentArea) return;
 
     menuItems.forEach(item => {
-        item.addEventListener('click', (e) => {
+        item.addEventListener('click', async (e) => {
             e.preventDefault();
             menuItems.forEach(i => i.classList.remove('active'));
             item.classList.add('active');
@@ -111,7 +111,8 @@ function initCuidadorEvents(baseHtml) {
                 contentArea.innerHTML = baseHtml;
                 initActionButtons();
             } else {
-                contentArea.innerHTML = obtenerDatosSeccion(vista, 'cuidador');
+                contentArea.innerHTML = '<div class="card fade-in"><p>Cargando...</p></div>';
+                contentArea.innerHTML = await obtenerDatosSeccion(vista, 'cuidador');
             }
         });
     });

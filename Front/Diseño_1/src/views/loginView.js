@@ -60,13 +60,13 @@ function initLoginEvents() {
 
     if (!form) return;
 
-    form.addEventListener('submit', (event) => {
+    form.addEventListener('submit', async (event) => {
         event.preventDefault(); 
 
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
 
-        const usuarioLogueado = autenticarUsuario(email, password);
+        const usuarioLogueado = await autenticarUsuario(email, password);
 
         if (usuarioLogueado) {
             errorDiv.style.display = 'none';
