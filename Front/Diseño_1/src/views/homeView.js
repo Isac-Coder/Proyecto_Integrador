@@ -5,7 +5,7 @@ export function HomeView() {
         const styleLink = document.createElement('link');
         styleLink.id = 'home-style';
         styleLink.rel = 'stylesheet';
-        styleLink.href = './styles/home.css';
+        styleLink.href = './styles/styles.css';
         document.head.appendChild(styleLink);
     }
 
