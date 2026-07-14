@@ -82,3 +82,25 @@ Frontend:
 - Asegurarse de que el archivo Back/.env contenga la configuración correcta de PostgreSQL o de que el sistema pueda funcionar en modo respaldo.
 - Abrir el frontend en el navegador y probar el flujo de login.
 - Navegar por las secciones del profesional o cuidador para confirmar que los datos se cargan desde la API.
+
+
+
+6. ## 🎨 Gestión y Compilación de Estilos con SASS
+
+Para mantener una identidad visual unificada y optimizar el rendimiento, migramos el diseño de la plataforma a **SASS (SCSS)**. Los estilos de todas las vistas (**Home, Login, Paciente y Cuidador**) se encuentran centralizados en el archivo maestro `src/sass/styles.scss` utilizando variables globales de marca.
+
+Para trabajar en el desarrollo o realizar pruebas en vivo durante la exposición, el archivo se compila automáticamente a CSS mediante la terminal.
+
+### 🚀 Cómo correr el compilador en tiempo real (`--watch`)
+
+1. **Abrir la terminal e ingresar a la carpeta del Frontend:**
+   ```bash
+   cd Front/Diseño_1
+   ```
+
+2. **Ejecutar el comando de escucha de SASS:**
+   ```bash
+   sass --watch src/sass/styles.scss:src/styles/styles.css
+   ```
+
+*Nota: Deja esta terminal abierta mientras editas el código; SASS detectará cada guardado y actualizará el archivo `styles.css` de forma automática.*

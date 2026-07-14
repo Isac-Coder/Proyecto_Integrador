@@ -1,0 +1,580 @@
+@charset "UTF-8";
+/* ==========================================================================
+   1. VARIABLES, TOKENS DE MARCA Y FUENTES
+   ========================================================================== */
+@import url("https://googleapis.com");
+/* ==========================================================================
+   2. ESTILOS GLOBALES Y ANIMACIONES (RESET & REUSABLES)
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: #f4f3ef;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  color: #2e2e2e;
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* ==========================================================================
+   3. VISTA: HOME (LANDING PAGE PÚBLICA)
+   ========================================================================== */
+.home-container {
+  min-height: 100vh;
+  background-color: #f4f3ef;
+  /* --- Barra de Navegación Pública --- */
+}
+.home-container .public-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 60px;
+  background-color: transparent;
+}
+.home-container .public-nav .logo {
+  font-family: "Playfair Display", serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1b4332;
+}
+.home-container .public-nav .nav-links a {
+  text-decoration: none;
+  color: #4a4a4a;
+  margin-right: 28px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+.home-container .public-nav .nav-links a:hover {
+  color: #1b4332;
+}
+.home-container .public-nav .btn-reservar {
+  background-color: #cf8a72;
+  color: #ffffff;
+  text-decoration: none;
+  padding: 14px 28px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  border-radius: 0px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+.home-container .public-nav .btn-reservar:hover {
+  background-color: #b8755e;
+  transform: translateY(-1px);
+}
+.home-container {
+  /* --- Sección Principal (Hero) --- */
+}
+.home-container .hero-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 40px 60px;
+  min-height: calc(100vh - 100px);
+}
+.home-container .hero-section .hero-content {
+  flex: 1;
+  max-width: 550px;
+  padding-right: 40px;
+}
+.home-container .hero-section .hero-content h1 {
+  font-family: "Playfair Display", serif;
+  font-size: 3.5rem;
+  line-height: 1.15;
+  font-weight: 500;
+  color: #1e1e1e;
+  margin-bottom: 24px;
+}
+.home-container .hero-section .hero-content .hero-subtitle {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #5a5a5a;
+  margin-bottom: 32px;
+}
+.home-container .hero-section .hero-image-placeholder {
+  flex: 1;
+  height: 550px;
+  border-radius: 4px;
+  background-color: #e5e2da;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+}
+.home-container {
+  /* --- Diseño Responsivo del Home --- */
+}
+@media (max-width: 992px) {
+  .home-container .public-nav {
+    padding: 20px 30px;
+  }
+  .home-container .public-nav .nav-links {
+    display: none;
+  }
+  .home-container .hero-section {
+    flex-direction: column;
+    padding: 20px 30px;
+    text-align: center;
+  }
+  .home-container .hero-section .hero-content {
+    padding-right: 0;
+    margin-bottom: 40px;
+    max-width: 100%;
+  }
+  .home-container .hero-section .hero-content h1 {
+    font-size: 2.5rem;
+  }
+  .home-container .hero-section .hero-image-placeholder {
+    width: 100%;
+    height: 350px;
+  }
+}
+
+/* ==========================================================================
+   4. VISTA: LOGIN (ACCESO DE USUARIOS)
+   ========================================================================== */
+.login-container {
+  background-color: #f4f3ef;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.login-container .login-card {
+  background-color: #ffffff;
+  padding: 40px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 450px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+.login-container .login-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.login-container .login-header .login-logo {
+  font-family: "Playfair Display", serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1b4332;
+  margin-bottom: 12px;
+}
+.login-container .login-header h1 {
+  font-size: 1.5rem;
+  color: #1e1e1e;
+  margin: 0 0 8px 0;
+}
+.login-container .login-header p {
+  font-size: 0.9rem;
+  color: #666666;
+  line-height: 1.4;
+  margin: 0;
+}
+.login-container .login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.login-container .login-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.login-container .login-form .form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4a4a4a;
+}
+.login-container .login-form .form-group input {
+  padding: 12px 16px;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: #2e2e2e;
+  transition: border-color 0.3s ease;
+}
+.login-container .login-form .form-group input:focus {
+  outline: none;
+  border-color: #1b4332;
+}
+.login-container .login-form .form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+/* ==========================================================================
+   5. INFRAESTRUCTURA BASE: LAYOUT DE DASHBOARDS (SIDEBAR & MAINS)
+   ========================================================================== */
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f4f3ef;
+  /* --- Estructura del Sidebar --- */
+}
+.dashboard-layout .sidebar {
+  width: 260px;
+  background-color: #ffffff;
+  padding: 30px 20px;
+  border-right: 1px solid #eef2f6;
+  display: flex;
+  flex-direction: column;
+}
+.dashboard-layout .sidebar .sidebar-logo {
+  font-family: "Playfair Display", serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 40px;
+  padding-left: 12px;
+}
+.dashboard-layout .sidebar .sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dashboard-layout .sidebar .menu-item {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  color: #64748b;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  transition: all 0.2s ease-in-out;
+}
+.dashboard-layout .sidebar .logout-item {
+  margin-top: auto;
+  color: #ef4444 !important;
+}
+.dashboard-layout .sidebar .logout-item:hover {
+  background-color: #fef2f2 !important;
+}
+.dashboard-layout .sidebar {
+  /* Temas de Sidebar basados en el Rol */
+}
+.dashboard-layout .sidebar.sidebar-profesional .sidebar-logo {
+  color: #1b4332;
+}
+.dashboard-layout .sidebar.sidebar-profesional .menu-item:hover, .dashboard-layout .sidebar.sidebar-profesional .menu-item.active {
+  background-color: #1b4332 !important;
+  color: #ffffff !important;
+}
+.dashboard-layout .sidebar.sidebar-cuidador .sidebar-logo {
+  color: #40916c;
+}
+.dashboard-layout .sidebar.sidebar-cuidador .menu-item:hover, .dashboard-layout .sidebar.sidebar-cuidador .menu-item.active {
+  background-color: #40916c !important;
+  color: #ffffff !important;
+}
+.dashboard-layout {
+  /* --- Área de Contenido Principal del Panel --- */
+}
+.dashboard-layout .dashboard-main {
+  flex: 1;
+  padding: 40px;
+  overflow-y: auto;
+}
+.dashboard-layout .dashboard-main .dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+.dashboard-layout .dashboard-main .dashboard-header .welcome-text h2 {
+  margin: 0 0 4px 0;
+  font-size: 1.6rem;
+  color: #1e293b;
+}
+.dashboard-layout .dashboard-main .dashboard-header .welcome-text .current-date {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+.dashboard-layout .dashboard-main .dashboard-header .header-search input {
+  padding: 10px 16px;
+  width: 280px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  outline: none;
+  font-size: 0.9rem;
+}
+.dashboard-layout .dashboard-main .dashboard-header .avatar {
+  width: 40px;
+  height: 40px;
+  background-color: #e5e2da;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 600;
+  color: #1e293b;
+}
+.dashboard-layout .dashboard-main .dashboard-grid {
+  display: grid;
+  grid-template-columns: 1.8fr 1.2fr;
+  gap: 30px;
+}
+@media (max-width: 1200px) {
+  .dashboard-layout .dashboard-main .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Componentes Reutilizables de Tarjetas --- */
+.card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  margin-bottom: 24px;
+  transition: transform 0.2s ease;
+}
+.card:hover {
+  transform: translateY(-2px);
+}
+.card h3 {
+  font-size: 0.85rem;
+  letter-spacing: 1.2px;
+  margin: 0 0 16px 0;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+/* ==========================================================================
+   6. VISTA ESPECÍFICA: PANEL DE PACIENTE / PROFESIONAL
+   ========================================================================== */
+.sidebar-profesional ~ .dashboard-main .next-appointment-card {
+  background-color: #1b4332;
+  color: #ffffff;
+}
+.sidebar-profesional ~ .dashboard-main .btn-detalles {
+  background-color: #ffffff;
+  color: #1b4332;
+}
+
+/* --- Información Médica y de Citas --- */
+.doctor-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.doctor-info .doctor-avatar {
+  width: 48px;
+  height: 48px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+}
+
+.appointment-date {
+  display: flex;
+  gap: 20px;
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+}
+
+.card-actions button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.card-actions .btn-reprogramar {
+  background-color: transparent;
+  border: 1px solid white;
+  color: white;
+  margin-right: 10px;
+}
+
+/* --- Módulo de Signos Vitales --- */
+.vitals-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
+}
+@media (max-width: 576px) {
+  .vitals-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.vitals-grid .vital-card {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  border-left: 5px solid transparent;
+}
+.vitals-grid .vital-card.vital-glucose {
+  border-left-color: #60a5fa;
+}
+.vitals-grid .vital-card.vital-heart {
+  border-left-color: #f87171;
+}
+.vitals-grid .vital-card.vital-oxygen {
+  border-left-color: #34d399;
+}
+.vitals-grid .vital-card.vital-pressure {
+  border-left-color: #fbbf24;
+}
+.vitals-grid .vital-card .vital-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+.vitals-grid .vital-card .vital-label {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+/* --- Barras de Progreso de Salud --- */
+.progress-bar-container {
+  background-color: #e2e8f0;
+  border-radius: 10px;
+  height: 8px;
+  overflow: hidden;
+  margin: 12px 0;
+}
+.progress-bar-container .progress-bar {
+  background-color: #cf8a72;
+  height: 100%;
+  border-radius: 10px;
+}
+
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+/* --- Listados de Medicamentos o Rutinas --- */
+.actions-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.actions-list li {
+  padding: 16px 0;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #1e293b;
+}
+.actions-list li:last-child {
+  border-bottom: none;
+}
+.actions-list li .arrow {
+  color: #64748b;
+}
+
+/* ==========================================================================
+   7. VISTA ESPECÍFICA: PANEL DE CUIDADORES
+   ========================================================================== */
+.sidebar-cuidador ~ .dashboard-main {
+  /* --- Perfil del Paciente Asignado --- */
+}
+.sidebar-cuidador ~ .dashboard-main .card-main-cuidador {
+  background-color: #40916c;
+  color: #ffffff;
+}
+.sidebar-cuidador ~ .dashboard-main .card-main-cuidador .patient-assigned-profile {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 15px;
+}
+.sidebar-cuidador ~ .dashboard-main .card-main-cuidador .patient-assigned-profile .patient-avatar-large {
+  width: 64px;
+  height: 64px;
+  background-color: rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+.sidebar-cuidador ~ .dashboard-main .card-main-cuidador .patient-assigned-profile .patient-quick-meta h4 {
+  margin: 0 0 4px 0;
+  font-size: 1.2rem;
+}
+.sidebar-cuidador ~ .dashboard-main .card-main-cuidador .patient-assigned-profile .patient-quick-meta p {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+.sidebar-cuidador ~ .dashboard-main .btn-detalles {
+  background-color: #ffffff;
+  color: #40916c;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+.sidebar-cuidador ~ .dashboard-main {
+  /* --- Historial / Bitácora de Cuidados Diarios --- */
+}
+.sidebar-cuidador ~ .dashboard-main .caregiver-log-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sidebar-cuidador ~ .dashboard-main .caregiver-log-container .log-entry {
+  background-color: #f8fafc;
+  border-left: 4px solid #40916c;
+  padding: 14px 18px;
+  border-radius: 0 8px 8px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.sidebar-cuidador ~ .dashboard-main .caregiver-log-container .log-entry .log-info span {
+  display: block;
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.sidebar-cuidador ~ .dashboard-main .caregiver-log-container .log-entry .log-info p {
+  margin: 4px 0 0 0;
+  font-size: 0.95rem;
+  color: #1e293b;
+  font-weight: 500;
+}
+.sidebar-cuidador ~ .dashboard-main .caregiver-log-container .log-entry .badge-status {
+  background-color: rgba(64, 145, 108, 0.15);
+  color: #40916c;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/*# sourceMappingURL=styles.css.map */
