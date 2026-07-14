@@ -1,12 +1,11 @@
 // src/views/registerView.js
 
 export function registerView() {
-    // Reutilizamos el estilo del login ya que la estructura del formulario es hermana
     if (!document.getElementById('login-style')) {
         const styleLink = document.createElement('link');
         styleLink.id = 'login-style';
         styleLink.rel = 'stylesheet';
-        styleLink.href = '/Proyecto_Integrador/Front/Diseño_1/src/styles/login.css';
+        styleLink.href = './styles/login.css';
         document.head.appendChild(styleLink);
     }
 

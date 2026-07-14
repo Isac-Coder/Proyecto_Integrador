@@ -6,7 +6,7 @@ export function cuidadorView() {
         const styleLink = document.createElement('link');
         styleLink.id = 'medico-style';
         styleLink.rel = 'stylesheet';
-        styleLink.href = '/Proyecto_Integrador/Front/Diseño_1/src/styles/paciente.css';
+        styleLink.href = './styles/paciente.css';
         document.head.appendChild(styleLink);
     }
 

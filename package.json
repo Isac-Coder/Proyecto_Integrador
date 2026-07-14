@@ -1,0 +1,11 @@
+{
+  "name": "proyecto-i",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node tools/run-all.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.0"
+  }
+}

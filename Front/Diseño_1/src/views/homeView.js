@@ -1,12 +1,11 @@
 // src/views/homeView.js
 
 export function HomeView() {
-    // Inyección dinámica usando la ruta absoluta limpia del servidor
     if (!document.getElementById('home-style')) {
         const styleLink = document.createElement('link');
         styleLink.id = 'home-style';
         styleLink.rel = 'stylesheet';
-        styleLink.href = '/Proyecto_Integrador/Front/Diseño_1/src/styles/home.css';
+        styleLink.href = './styles/home.css';
         document.head.appendChild(styleLink);
     }
 

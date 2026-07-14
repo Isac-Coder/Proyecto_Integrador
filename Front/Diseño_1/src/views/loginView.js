@@ -6,7 +6,7 @@ export function loginView() {
         const styleLink = document.createElement('link');
         styleLink.id = 'login-style';
         styleLink.rel = 'stylesheet';
-        styleLink.href = '/Proyecto_Integrador/Front/Diseño_1/src/styles/login.css';
+        styleLink.href = './styles/login.css';
         document.head.appendChild(styleLink);
     }
 

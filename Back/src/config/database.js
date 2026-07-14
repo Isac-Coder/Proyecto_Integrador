@@ -1,6 +1,3 @@
-const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
-
 const { Pool } = require('pg');
 
 let pool;
@@ -11,7 +8,7 @@ async function connectDatabase() {
   const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME } = process.env;
 
   if (!DB_HOST || !DB_USER || !DB_NAME) {
-    console.warn('⚠️  La conexión a la base de datos no está configurada completamente. Se usará el modo de respaldo en memoria.');
+    console.warn('La conexión a la base de datos no está configurada completamente. Se usará el modo de respaldo en memoria.');
     return null;
   }
 
