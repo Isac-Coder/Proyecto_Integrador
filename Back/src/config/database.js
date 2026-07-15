@@ -1,4 +1,8 @@
+const path = require('path');
+const dotenv = require('dotenv');
 const { Pool } = require('pg');
+
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 let pool;
 
@@ -20,11 +24,17 @@ async function connectDatabase() {
     database: DB_NAME,
     max: 10,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000
+    connectionTimeoutMillis: 10000,
+    ssl: false
   });
 
-  await pool.query('SELECT 1');
-  return pool;
+  try {
+    await pool.query('SELECT 1');
+    return pool;
+  } catch (error) {
+    console.error('Error al conectar con PostgreSQL:', error.message);
+    throw error;
+  }
 }
 
 module.exports = { connectDatabase };

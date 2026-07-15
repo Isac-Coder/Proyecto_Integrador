@@ -149,3 +149,47 @@ Este documento describe de forma clara y organizada los cambios incorporados dur
 
    Se creo el archivo montar_image.txt donde se explica como crear y montar la iso de un contenedor de docker.
 
+10. ## Archivo de prueva de conexción.
+--------------------------
+
+   - se creo el archivo de test para verificar si el backend si agrega a los nuevos usuarios registrados a la base de datos.
+   
+   - se edito la linea 52 del lanzador (.tools/run-all.js), para que tambien funcione en windows
+
+   Nota: Falta verificar que esto no dañe la ejecucion en Linux
+
+   - se mejoro para que cierre los procesos que esten en los puertos establecidos para el uso del Front y el Back
+
+11. ## Mejora del lanzador.
+--------------------------
+
+   - Ahora el archivo lanzador (.tools/run-all.js), funciona tanto en Windows y Linux.
+
+12. ## automatizar la abertura de la pagina
+--------------------------
+
+   Se creo un script para que se abra el navegador automaticamente al momento de iniciar el "npm start", en caso de que no se abre por restricciones del sistema se puede utilizar el comando "node tools/open-browser.js".
+
+13. ## autenticación con la db
+--------------------------
+
+   - Ahora se valida que la db este iniciada
+   - Los usuarios que se registren se guardaran en la Data Base
+   - Se cambio la autenticación para el inicio de sesion, ahora se comparan con los que estan en la Data Base
+   - se creo el archivo auth,login.test.js para testear el inicio de sesion.
+
+14. Se corrigio un error al iniciar el npm start
+--------------------------
+
+   el error es:
+
+   ``` bash
+         (node:11276) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+         (Use `node --trace-deprecation ...` to show where the warning was created)
+         Se intentó abrir las URLs en el navegador.
+   ```
+
+   Causa del error: el shell estaba en true
+   Solución del error: se cambio el shell a false
+
+   Archivo no encontrado
