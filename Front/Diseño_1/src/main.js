@@ -2,7 +2,7 @@
 import { HomeView } from './views/homeView.js';
 import { loginView } from './views/loginView.js';
 import { registerView } from './views/registerView.js';
-import { profesionalView } from './views/medicoView.js';
+import { profesionalView } from './views/profesionalView.js';
 import { cuidadorView } from './views/cuidadorView.js';
 import { notFoundView } from './views/notFoundView.js';
 

@@ -1,30 +1,33 @@
-// src/services/data.service.js
+// ==========================================
+// PROYECTO INTEGRADOR - ZOE CARE
+// RAMA: Desarrollo-Backend-IV
+// ARCHIVO: src/services/data.service.js
+// LÓGICA: Petición de datos puros (JSON)
+// ==========================================
 
-const API_URL = 'http://localhost:3001/api';
+const URL_BASE_DE_LA_API_DEL_BACKEND = 'http://localhost:3001/api';
 
-export async function obtenerDatosSeccion(seccion, rol = 'profesional') {
+/**
+ * Obtiene los datos en formato JSON crudo para una sección específica desde el backend.
+ * Si el servidor está apagado o da error, retorna un objeto vacío para activar tu depuración de 'undefined'.
+ * 
+ * @param {string} parametro_nombre_de_la_seccion - Nombre de la pestaña seleccionada ('citas', 'mensajes', etc.)
+ * @param {string} parametro_rol_del_usuario - Rol que realiza la consulta ('profesional', 'cuidador')
+ * @returns {Promise<Object>} Datos limpios del registro médico en formato JSON.
+ */
+export async function obtenerDatosSeccion(parametro_nombre_de_la_seccion, parametro_rol_del_usuario = 'profesional') {
     try {
-        const response = await fetch(`${API_URL}/data/sections/${rol}/${seccion}`);
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-            return `<div class="card fade-in"><p>No se pudieron cargar los datos.</p></div>`;
+        const objeto_respuesta_http_servidor = await fetch(`${URL_BASE_DE_LA_API_DEL_BACKEND}/data/sections/${parametro_rol_del_usuario}/${parametro_nombre_de_la_seccion}`);
+        
+        if (!objeto_respuesta_http_servidor.ok) {
+            throw new Error('Servidor local offline o código de estado erróneo.');
         }
-
-        const itemList = (data.data?.items || []).map((item) => {
-            const entries = Object.entries(item).map(([key, value]) => `<li><strong>${key}:</strong> ${value}</li>`).join('');
-            return `<ul style="margin-top:10px; padding-left:20px;">${entries}</ul>`;
-        }).join('');
-
-        return `
-            <div class="card fade-in">
-                <h3>${data.data?.title || 'Sección'}</h3>
-                <p>${data.data?.description || ''}</p>
-                ${itemList}
-            </div>
-        `;
-    } catch (error) {
-        console.error('Error al cargar datos del backend:', error);
-        return `<div class="card fade-in"><p>No se pudieron cargar los datos.</p></div>`;
+        
+        const objeto_datos_json = await objeto_respuesta_http_servidor.json();
+        return objeto_datos_json.data || objeto_datos_json;
+    } catch (objeto_error_detectado) {
+        console.warn(`[DEBUG AUDIT] Backend desconectado en la pestaña "${parametro_nombre_de_la_seccion}". Entregando objeto vacío.`);
+        // Retornamos un objeto completamente vacío adrede para disparar los 'undefined' en la vista
+        return {}; 
     }
 }
