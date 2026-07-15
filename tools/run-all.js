@@ -11,14 +11,14 @@ const processes = [
     name: 'backend',
     cwd: path.join(root, 'Back'),
     command: process.platform === 'win32' ? 'npm.cmd' : 'npm',
-    args: ['run', 'start'],
+    args: ['start'],
     url: 'http://127.0.0.1:3001/health'
   },
   {
     name: 'frontend',
     cwd: path.join(root, 'Front', 'Diseño_1'),
     command: process.platform === 'win32' ? 'npm.cmd' : 'npm',
-    args: ['run', 'start'],
+    args: ['start'],
     url: 'http://127.0.0.1:5500/'
   }
 ];
@@ -52,7 +52,7 @@ function spawnService(proc) {
   const child = spawn(proc.command, proc.args, {
     cwd: proc.cwd,
     stdio: 'inherit',
-    shell: process.platform === 'win32'
+    shell: false
   });
 
   children.push(child);
