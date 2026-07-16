@@ -1202,4 +1202,133 @@ body {
   font-weight: 500;
 }
 
+
+
+/* ==========================================================================
+   X. COMPONENTE: GESTIÓN DE CITAS / VISITAS CRONOLÓGICAS
+   ========================================================================== */
+
+/* Contenedor de rejilla para alinear las tarjetas verticalmente en columna */
+.citas-timeline-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 10px;
+    width: 100%;
+}
+
+/* Tarjeta contenedora individual de cada cita */
+.cita-schedule-card {
+    background-color: var(--white);
+    border: 1px solid rgba(70, 84, 83, 0.08); /* Uso sutil de tu verde pizarra */
+    border-radius: 14px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    box-shadow: 0 4px 12px rgba(59, 68, 67, 0.02);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+}
+
+/* Efecto al pasar el mouse por encima de la tarjeta */
+.cita-schedule-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(59, 68, 67, 0.06);
+    border-color: rgba(70, 84, 83, 0.15);
+}
+
+/* Bloque izquierdo de la tarjeta: La hora de la consulta programada */
+.cita-time-badge {
+    background-color: rgba(70, 84, 83, 0.06); /* Fondo sutil verde pizarra */
+    color: var(--primary-zoe-dark);
+    font-size: 0.95rem;
+    font-weight: 700;
+    padding: 10px 16px;
+    border-radius: 10px;
+    min-width: 105px;
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+/* Bloque central de la tarjeta: Nombre del paciente, icono y motivo */
+.cita-body-info {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap; /* Soporte responsivo por si el texto es muy largo */
+}
+
+/* Nombre del paciente dentro de la tarjeta */
+.cita-body-info h4 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+    min-width: 160px;
+}
+
+/* Etiqueta de texto para el motivo de la consulta con su respectivo icono */
+.cita-meta-tag {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    flex-grow: 1;
+}
+
+/* Iconos de tabler (ti) que acompañan al motivo de la consulta */
+.cita-meta-tag i {
+    font-size: 1.1rem;
+    color: var(--accent-terracota); /* Terracota cálido de tu paleta */
+}
+
+/* Pequeña etiqueta de estado visual ('En Espera', 'Completada', etc.) */
+.badge-status-item {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 6px 14px;
+    border-radius: 50px;
+    text-align: center;
+}
+
+/* Variación visual cuando la cita está pendiente o en espera */
+.badge-status-item.pendiente {
+    background-color: rgba(210, 150, 127, 0.12); /* Base terracota transparente */
+    color: var(--accent-terracota);
+}
+
+/* --- ADAPTACIÓN RESPONSIVA PARA DISPOSITIVOS MÓVILES --- */
+@media (max-width: 576px) {
+    .cita-schedule-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 20px;
+    }
+
+    .cita-time-badge {
+        width: 100%;
+        text-align: left;
+    }
+
+    .cita-body-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .badge-status-item {
+        align-self: flex-start;
+    }
+}
+
+
 /*# sourceMappingURL=styles.css.map */
