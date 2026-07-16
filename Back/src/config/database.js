@@ -1,30 +1,51 @@
+const path = require('path');
+const dotenv = require('dotenv');
 const { Pool } = require('pg');
+
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 let pool;
 
 async function connectDatabase() {
   if (pool) return pool;
 
-  const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME } = process.env;
+  const { DB_URL, DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME } = process.env;
 
-  if (!DB_HOST || !DB_USER || !DB_NAME) {
-    console.warn('La conexión a la base de datos no está configurada completamente. Se usará el modo de respaldo en memoria.');
-    return null;
+  if (DB_URL) {
+    pool = new Pool({
+      connectionString: DB_URL,
+      ssl: { rejectUnauthorized: false },
+      family: 4,
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000
+    });
+  } else {
+    if (!DB_HOST || !DB_USER || !DB_NAME) {
+      console.warn('La conexión a la base de datos no está configurada completamente. Se usará el modo de respaldo en memoria.');
+      return null;
+    }
+
+    pool = new Pool({
+      host: DB_HOST,
+      port: DB_PORT ? Number(DB_PORT) : 5432,
+      user: DB_USER,
+      password: DB_PASSWORD || '',
+      database: DB_NAME,
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
+      ssl: false
+    });
   }
 
-  pool = new Pool({
-    host: DB_HOST,
-    port: DB_PORT ? Number(DB_PORT) : 5432,
-    user: DB_USER,
-    password: DB_PASSWORD || '',
-    database: DB_NAME,
-    max: 10,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000
-  });
-
-  await pool.query('SELECT 1');
-  return pool;
+  try {
+    await pool.query('SELECT 1');
+    return pool;
+  } catch (error) {
+    console.error('Error al conectar con PostgreSQL/Supabase:', error.message);
+    throw error;
+  }
 }
 
 module.exports = { connectDatabase };

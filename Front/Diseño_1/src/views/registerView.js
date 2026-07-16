@@ -1,4 +1,5 @@
 // src/views/registerView.js
+import { registrarUsuarioEnBackend } from '../services/registro.service.js';
 
 export function registerView() {
     if (!document.getElementById('login-style')) {
@@ -62,41 +63,35 @@ export function registerView() {
 /**
  * Captura el envío del formulario y simula el almacenamiento del nuevo usuario
  */
-function initRegisterEvents() {
+async function initRegisterEvents() {
     const form = document.getElementById('register-form');
     const successDiv = document.getElementById('register-success');
 
     if (!form) return;
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const nombre = document.getElementById('reg-name').value;
-        const email = document.getElementById('reg-email').value;
+        const nombre = document.getElementById('reg-name').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
         const rol = document.getElementById('reg-role').value;
         const password = document.getElementById('reg-password').value;
 
-        // Estructuramos el nuevo usuario
-        const nuevoUsuario = { nombre, email, rol, password };
+        try {
+            const resultado = await registrarUsuarioEnBackend(nombre, email, password, rol);
 
-        // 💾 SIMULACIÓN DE BASE DE DATOS USANDO LOCALSTORAGE
-        // Obtenemos los usuarios que ya existan guardados, o creamos un arreglo vacío si es el primero
-        let usuariosRegistrados = JSON.parse(localStorage.getItem('usuarios_db')) || [];
-        
-        // Agregamos el nuevo usuario al arreglo
-        usuariosRegistrados.push(nuevoUsuario);
-        
-        // Lo volvemos a guardar en la memoria local texturizado en JSON
-        localStorage.setItem('usuarios_db', JSON.stringify(usuariosRegistrados));
+            successDiv.innerText = `🎉 ¡Registro exitoso, ${resultado.user?.nombre || nombre}! Redirigiéndote al login...`;
+            successDiv.style.display = 'block';
+            form.reset();
 
-        // Mostramos mensaje de éxito dinámico en pantalla
-        successDiv.innerText = `🎉 ¡Registro exitoso, ${nombre}! Redirigiéndote al login...`;
-        successDiv.style.display = 'block';
-        form.reset();
-
-        // Redirigimos automáticamente al Login después de 2.5 segundos para que pueda iniciar sesión
-        setTimeout(() => {
-            window.location.hash = '#/login';
-        }, 2500);
+            setTimeout(() => {
+                window.location.hash = '#/login';
+            }, 2500);
+        } catch (error) {
+            successDiv.innerText = error.message || 'No se pudo registrar el usuario.';
+            successDiv.style.display = 'block';
+            successDiv.style.background = '#fde8e8';
+            successDiv.style.color = '#b91c1c';
+        }
     });
 }

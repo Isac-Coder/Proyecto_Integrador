@@ -20,13 +20,10 @@ async function router() {
     const appContainer = document.getElementById('app');
     if (!appContainer) return;
 
-    // Obtener la ruta del hash actual (por ejemplo: #/login -> /login)
     const hash = window.location.hash.slice(1) || '/';
-    
-    // Buscar la vista correspondiente o asignar la vista 404
-    const viewComponent = routes[hash] || notFoundView;
+    const normalizedHash = hash.startsWith('/') ? hash : `/${hash}`;
+    const viewComponent = routes[normalizedHash] || notFoundView;
 
-    // Renderizar el string HTML retornado por la función de la vista
     appContainer.innerHTML = await viewComponent();
 }
 

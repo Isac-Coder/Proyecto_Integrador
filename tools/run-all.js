@@ -2,6 +2,19 @@ const { spawn } = require('child_process');
 const http = require('http');
 const path = require('path');
 
+function openBrowser() {
+  const scriptPath = path.join(__dirname, 'open-browser.js');
+  const child = spawn(process.execPath, [scriptPath], {
+    cwd: root,
+    stdio: 'inherit',
+    shell: false
+  });
+
+  child.on('error', (error) => {
+    console.error('No se pudo abrir el navegador:', error.message);
+  });
+}
+
 const root = path.resolve(__dirname, '..');
 const children = [];
 let shuttingDown = false;
@@ -42,18 +55,29 @@ function stopAll() {
   shuttingDown = true;
   for (const child of children) {
     if (!child.killed) {
-      child.kill('SIGTERM');
+      child.kill(process.platform === 'win32' ? 'SIGINT' : 'SIGTERM');
     }
   }
   setTimeout(() => process.exit(0), 200);
 }
 
 function spawnService(proc) {
-  const child = spawn(proc.command, proc.args, {
+  const options = {
     cwd: proc.cwd,
     stdio: 'inherit',
+    windowsHide: false,
     shell: false
-  });
+  };
+
+  let command = proc.command;
+  let args = proc.args;
+
+  if (process.platform === 'win32' && command.toLowerCase().endsWith('.cmd')) {
+    args = ['/c', command, ...proc.args];
+    command = 'cmd.exe';
+  }
+
+  const child = spawn(command, args, options);
 
   children.push(child);
 
@@ -76,6 +100,12 @@ async function main() {
 
     spawnService(proc);
   }
+
+  setTimeout(() => {
+    if (!shuttingDown) {
+      openBrowser();
+    }
+  }, 1500);
 
   process.stdin.resume();
   process.on('SIGINT', stopAll);

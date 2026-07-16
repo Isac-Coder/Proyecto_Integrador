@@ -20,7 +20,7 @@ export function HomeView() {
                     <a href="#/">Equipo</a>
                     <a href="#/">Contacto</a>
                 </nav>
-                <a href="#/login" class="btn-reservar">RESERVAR CITA</a>
+                <a href="#/login" class="btn-ingresar">Ingresar</a>
             </header>
 
             <!-- Sección de Presentación Principal (Hero) -->
