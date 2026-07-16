@@ -1,5 +1,6 @@
 // src/views/loginView.js
 import { autenticarUsuario } from '../services/auth.services.js';
+import { normalizarRolParaFrontend } from '../utils/role.mjs';
 
 export function loginView() {
     if (!document.getElementById('login-style')) {
@@ -66,19 +67,22 @@ function initLoginEvents() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
 
-        const usuarioLogueado = await autenticarUsuario(email, password);
-
-        if (usuarioLogueado) {
+        try {
+            const usuarioLogueado = await autenticarUsuario(email, password);
             errorDiv.style.display = 'none';
             sessionStorage.setItem('user_session', JSON.stringify(usuarioLogueado));
 
-            if (usuarioLogueado.rol === 'profesional') {
+            const rol = normalizarRolParaFrontend(usuarioLogueado.rol);
+
+            if (rol === 'profesional') {
                 window.location.hash = '#/profesional';
-            } else if (usuarioLogueado.rol === 'cuidador') {
+            } else if (rol === 'cuidador') {
                 window.location.hash = '#/cuidador';
+            } else {
+                window.location.hash = '#/';
             }
-        } else {
-            errorDiv.innerHTML = '⚠️ Credenciales incorrectas.<br><span style="font-size:0.8rem; font-weight:400; color:#666;">Intenta con: profesional@zoecare.com y contraseña 1234</span>';
+        } catch (error) {
+            errorDiv.innerHTML = error.message || '⚠️ Credenciales incorrectas.';
             errorDiv.style.display = 'block';
         }
     });
