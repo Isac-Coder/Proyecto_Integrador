@@ -5,6 +5,7 @@ import { registerView } from './views/registerView.js';
 import { profesionalView } from './views/medicoView.js';
 import { cuidadorView } from './views/cuidadorView.js';
 import { notFoundView } from './views/notFoundView.js';
+import { estaAutenticado, obtenerSesionActiva } from './services/auth.services.js';
 
 // 1. Mapeo del Sistema de Rutas de la SPA
 const routes = {
@@ -15,6 +16,11 @@ const routes = {
     '/cuidador': cuidadorView
 };
 
+const protectedRoutes = {
+    '/profesional': ['profesional'],
+    '/cuidador': ['cuidador']
+};
+
 // 2. Enrutador Principal Asíncrono
 async function router() {
     const appContainer = document.getElementById('app');
@@ -23,6 +29,21 @@ async function router() {
     const hash = window.location.hash.slice(1) || '/';
     const normalizedHash = hash.startsWith('/') ? hash : `/${hash}`;
     const viewComponent = routes[normalizedHash] || notFoundView;
+    const requiredRoles = protectedRoutes[normalizedHash];
+
+    if (requiredRoles) {
+        const session = obtenerSesionActiva();
+        if (!estaAutenticado() || !session || !requiredRoles.includes(session.rol)) {
+            window.location.hash = '#/login';
+            return;
+        }
+    }
+
+    if ((normalizedHash === '/login' || normalizedHash === '/register') && estaAutenticado()) {
+        const session = obtenerSesionActiva();
+        window.location.hash = session?.rol === 'cuidador' ? '#/cuidador' : '#/profesional';
+        return;
+    }
 
     appContainer.innerHTML = await viewComponent();
 }
