@@ -46,8 +46,8 @@ export function loginView() {
                     </div>
 
                     <div class="form-actions" style="margin-top: 10px;">
-                        <a href="#/" class="btn-back">Volver al Inicio</a>
-                        <button type="submit" class="btn-submit">Ingresar</button>
+                        <a href="#/" class="btn-outline-login ">Volver al Inicio</a>
+                        <button type="submit" class="btn btn-solid-login">Ingresar</button>
                     </div>
                 </form>
             </div>

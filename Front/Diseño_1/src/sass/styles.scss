@@ -307,7 +307,7 @@ body {
             .btn {
                 padding: 12px 24px; font-size: 0.9rem; font-weight: 700;
                 border-radius: 8px; cursor: pointer; text-decoration: none;
-                transition: $transition-fast; text-align: center; flex: 1;
+                transition: $transition-fast; text-align: center; flex: 0;
             }
             .btn-solid-login {
                 background-color: $accent-terracota; color: $white; border: none;
