@@ -193,3 +193,8 @@ Este documento describe de forma clara y organizada los cambios incorporados dur
    Solución del error: se cambio el shell a false
 
    Archivo no encontrado
+
+
+15. Usaremos solo css
+   Decidimos (Maryuris y Juan) no usar el SASS, aunque fuera mas facil usarlo tuvimos problemas al instalarlo y por ahorrar tiempo se decidio usar CSS puro
+
