@@ -341,27 +341,29 @@ async function crearPacienteConRelacion(datos) {
   await asegurarTablasPaciente(pool);
 
   const insertPaciente = await pool.query(
-    'INSERT INTO public.pacientes (nombre, fecha_nacimiento, direccion, historial_medico, horario_monitoreo, observaciones, nivel_alerta, estado_general, ubicacion, id_profecional) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id_paciente AS id, nombre, fecha_nacimiento, direccion, historial_medico, id_profecional',
+    'INSERT INTO public.pacientes (nombre, fecha_nacimiento, direccion, historial_medico, id_profecional) VALUES ($1, $2, $3, $4, $5) RETURNING id_paciente AS id, nombre, fecha_nacimiento, direccion, historial_medico, id_profecional',
     [
       datos.nombre || null,
       datos.fecha_nacimiento || null,
       datos.direccion || null,
       datos.historial_medico || null,
-      datos.horario_monitoreo || null,
-      datos.observaciones || null,
-      datos.nivel_alerta || null,
-      datos.estado_general || null,
-      datos.ubicacion || null,
       datos.id_profecional || null
     ]
   );
 
   const paciente = insertPaciente.rows[0];
 
+  if (datos.nivel_alerta || datos.estado_general || datos.ubicacion) {
+    await pool.query(
+      'INSERT INTO public.estado_pacientes (id_paciente, nivel_alerta, estado_general, ubicacion) VALUES ($1, $2, $3, $4)',
+      [paciente.id, datos.nivel_alerta || null, datos.estado_general || null, datos.ubicacion || null]
+    );
+  }
+
   if (datos.id_cuidador) {
     await pool.query(
-      'INSERT INTO public.asistencia_pacientes (id_paciente, id_cuidador) VALUES ($1, $2) ON CONFLICT (id_paciente, id_cuidador) DO NOTHING',
-      [paciente.id, datos.id_cuidador]
+      'INSERT INTO public.asistencia_pacientes (id_paciente, id_cuidador, horario_monitoreo, observaciones) VALUES ($1, $2, $3, $4) ON CONFLICT (id_paciente, id_cuidador) DO UPDATE SET horario_monitoreo = EXCLUDED.horario_monitoreo, observaciones = EXCLUDED.observaciones',
+      [paciente.id, datos.id_cuidador, datos.horario_monitoreo || null, datos.observaciones || null]
     );
   }
 
@@ -725,13 +727,14 @@ exports.createPaciente = async (req, res) => {
       fecha_nacimiento: fecha_nacimiento || null,
       direccion: direccion || null,
       historial_medico: historial_medico || null,
+      id_cuidador: cuidador.id,
+      id_profecional: id_profecional || null,
+      // Datos para otras tablas
       horario_monitoreo: horario_monitoreo || null,
       observaciones: observaciones || null,
       nivel_alerta: nivel_alerta || null,
       estado_general: estado_general || null,
-      ubicacion: ubicacion || null,
-      id_cuidador: cuidador.id,
-      id_profecional: id_profecional || null
+      ubicacion: ubicacion || null
     });
 
     return res.status(201).json({ success: true, item: paciente });
