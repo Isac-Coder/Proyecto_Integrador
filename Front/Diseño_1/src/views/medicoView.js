@@ -1,5 +1,5 @@
 // src/views/medicoView.js
-import { obtenerDatosSeccion, obtenerPacientes, asignarPacienteProfesional, obtenerPacienteDetalle, actualizarPaciente } from '../services/data.service.js';
+import { obtenerDatosSeccion, obtenerPacientes, asignarPacienteProfesional, obtenerPacienteDetalle, actualizarPaciente, obtenerCitasPaciente } from '../services/data.service.js';
 import { cerrarSesion, obtenerSesionActiva } from '../services/auth.services.js';
 
 export function profesionalView() {
@@ -105,6 +105,7 @@ export function profesionalView() {
 
     setTimeout(() => {
         initProfesionalDashboardEvents(estructuraDashboardBase);
+        actualizarIndicadoresDeNotificacion();
     }, 0);
 
     return `
@@ -114,8 +115,8 @@ export function profesionalView() {
                 <div class="sidebar-logo">Zoe Care</div>
                 <nav class="sidebar-menu">
                     <a href="#" class="menu-item active" data-view="dashboard"><i class="ti ti-smart-home"></i> Dashboard</a>
-                    <a href="#" class="menu-item" data-view="pacientes"><i class="ti ti-users"></i> Mis Pacientes</a>
-                    <a href="#" class="menu-item" data-view="citas"><i class="ti ti-calendar-event"></i> Citas / Visitas</a>
+                    <a href="#" class="menu-item" data-view="pacientes"><i class="ti ti-users"></i> Mis Pacientes <span class="notification-badge"></span></a>
+                    <a href="#" class="menu-item" data-view="citas"><i class="ti ti-calendar-event"></i> Citas / Visitas <span class="notification-badge"></span></a>
                     <a href="#" class="menu-item" data-view="mensajes"><i class="ti ti-message-circle"></i> Mensajes</a>
                     <a href="#" class="menu-item" data-view="resultados"><i class="ti ti-file-report"></i> Resultados</a>
                     <a href="#" class="menu-item" data-view="medicacion"><i class="ti ti-pill"></i> Indicaciones</a>
@@ -196,6 +197,44 @@ function initProfesionalDashboardEvents(dashboardBaseHtml) {
     initCardButtonsEvents();
     initLogoutEvents();
 }
+
+async function actualizarIndicadoresDeNotificacion() {
+    const session = obtenerSesionActiva();
+    if (!session) return;
+
+    const pacientes = await obtenerPacientes(session.rol, session.email);
+
+    // Indicador para pacientes con alertas
+    const pacientesConAlerta = pacientes.some(p => p.nivel_alerta && p.nivel_alerta.toLowerCase() !== 'bajo' && p.nivel_alerta.toLowerCase() !== 'normal');
+    const badgePacientes = document.querySelector('.sidebar .menu-item[data-view="pacientes"] .notification-badge');
+    if (badgePacientes) {
+        badgePacientes.style.display = pacientesConAlerta ? 'block' : 'none';
+    }
+
+    // Indicador para citas de hoy
+    if (pacientes.length > 0) {
+        const citasPromises = pacientes.map(p => obtenerCitasPaciente(p.id));
+        const citasDeTodos = (await Promise.all(citasPromises)).flat();
+
+        const hoy = new Date();
+        const inicioHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+        const finHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + 1);
+
+        const hayCitasHoy = citasDeTodos.some(cita => {
+            const fechaCita = new Date(cita.fecha_hora);
+            return fechaCita >= inicioHoy && fechaCita < finHoy;
+        });
+
+        const badgeCitas = document.querySelector('.sidebar .menu-item[data-view="citas"] .notification-badge');
+        if (badgeCitas) {
+            badgeCitas.style.display = hayCitasHoy ? 'block' : 'none';
+        }
+    }
+}
+
+
+
+
 
 async function renderProfesionalPacientesSection(container) {
     const session = obtenerSesionActiva();

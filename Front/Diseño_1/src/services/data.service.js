@@ -210,6 +210,32 @@ export async function crearCitaPaciente(idPaciente, cita) {
     }
 }
 
+export async function actualizarCitaPaciente(idPaciente, citaId, cita) {
+    try {
+        const response = await fetch(`${API_URL}/data/pacientes/${idPaciente}/citas/${citaId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(cita)
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Error al actualizar la cita del paciente:', error);
+        return { success: false, message: 'No se pudo actualizar la cita del paciente.' };
+    }
+}
+
+export async function eliminarCitaPaciente(idPaciente, citaId) {
+    try {
+        const response = await fetch(`${API_URL}/data/pacientes/${idPaciente}/citas/${citaId}`, {
+            method: 'DELETE'
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Error al eliminar la cita del paciente:', error);
+        return { success: false, message: 'No se pudo eliminar la cita del paciente.' };
+    }
+}
+
 export async function crearBitacoraRegistro(idPaciente, registro) {
     try {
         const response = await fetch(`${API_URL}/data/pacientes/${idPaciente}/bitacora/registros`, {

@@ -17,6 +17,8 @@ router.post('/pacientes/:id/medicamentos', controller.createMedicamentoPaciente)
 router.put('/pacientes/:id/medicamentos/:medicamentoId', controller.updateMedicamentoPaciente);
 router.get('/pacientes/:id/citas', controller.getCitasPaciente);
 router.post('/pacientes/:id/citas', controller.createCitaPaciente);
+router.put('/pacientes/:id/citas/:citaId', controller.updateCitaPaciente);
+router.delete('/pacientes/:id/citas/:citaId', controller.deleteCitaPaciente);
 router.post('/pacientes', controller.createPaciente);
 router.put('/paciente/:id', controller.updatePaciente);
 router.post('/pacientes/:id/relacionar-profesional', controller.assignPacienteProfesional);

@@ -722,18 +722,29 @@ body {
   min-height: 110px;
   resize: vertical;
 }
+.patient-form .form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
 .btn-submit {
   background-color: #d2967f;
   color: #ffffff;
   border: none;
   border-radius: 14px;
   padding: 14px 22px;
+  padding: 16px 24px;
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 12px 30px rgba(210, 150, 127, 0.18);
+  transition: all 0.25s ease-in-out;
+  flex: 1;
+  font-size: 0.95rem;
 }
 .btn-submit:hover {
   background-color: #bc7a6b;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(210, 150, 127, 0.25);
 }
 .btn-outline-login {
   background-color: transparent;

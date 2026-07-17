@@ -272,11 +272,19 @@ async function obtenerPacientesParaRol(rol, email) {
     const cuidador = await buscarCuidadorPorEmail(email);
     if (!cuidador) return [];
     const resultado = await pool.query(
-      `SELECT p.id_paciente AS id, p.nombre, p.fecha_nacimiento, p.direccion, p.historial_medico,
-        prof.nombre AS profesional_nombre, prof.email AS profesional_email
+      `SELECT p.id_paciente AS id, p.nombre, p.fecha_nacimiento, p.direccion,
+        prof.nombre AS profesional_nombre,
+        ep.nivel_alerta
        FROM public.pacientes p
        JOIN public.asistencia_pacientes ap ON ap.id_paciente = p.id_paciente
        LEFT JOIN public.profecionales prof ON prof.id_profecional = p.id_profecional
+       LEFT JOIN LATERAL (
+         SELECT nivel_alerta
+         FROM public.estado_pacientes
+         WHERE id_paciente = p.id_paciente
+         ORDER BY fecha_ultimo_registro DESC
+         LIMIT 1
+       ) ep ON true
        WHERE ap.id_cuidador = $1
        ORDER BY p.nombre`,
       [cuidador.id]
@@ -288,11 +296,19 @@ async function obtenerPacientesParaRol(rol, email) {
     const profesional = await buscarProfesionalPorEmail(email);
     if (!profesional) return [];
     const resultado = await pool.query(
-      `SELECT p.id_paciente AS id, p.nombre, p.fecha_nacimiento, p.direccion, p.historial_medico,
-        c.nombre AS cuidador_nombre, c.email AS cuidador_email
+      `SELECT p.id_paciente AS id, p.nombre, p.fecha_nacimiento, p.direccion,
+        c.nombre AS cuidador_nombre,
+        ep.nivel_alerta
        FROM public.pacientes p
        LEFT JOIN public.asistencia_pacientes ap ON ap.id_paciente = p.id_paciente
        LEFT JOIN public.encargados_o_cuidadores c ON c.id_cuidador = ap.id_cuidador
+       LEFT JOIN LATERAL (
+         SELECT nivel_alerta
+         FROM public.estado_pacientes
+         WHERE id_paciente = p.id_paciente
+         ORDER BY fecha_ultimo_registro DESC
+         LIMIT 1
+       ) ep ON true
        WHERE p.id_profecional = $1
        ORDER BY p.nombre`,
       [profesional.id]
@@ -426,6 +442,31 @@ async function crearCitaPaciente(idPaciente, cita) {
   const resultado = await pool.query(
     'INSERT INTO public.agendamiento_citas (id_paciente, id_profecional, fecha_hora_cita, lugar_cita, motivo, estado_cita) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id_cita AS id, id_paciente, id_profecional AS id_profesional, fecha_hora_cita AS fecha_hora, lugar_cita AS lugar, motivo, estado_cita AS estado',
     [Number(idPaciente), idProf, cita.fecha_hora, cita.lugar || null, cita.motivo || null, cita.estado || 'Agendada']
+  );
+  return resultado.rows[0] || null;
+}
+
+async function actualizarCitaPaciente(idPaciente, idCita, cita) {
+  const pool = await connectDatabase();
+  if (!pool) return null;
+  await asegurarTablasPaciente(pool);
+  const resultado = await pool.query(
+    `UPDATE public.agendamiento_citas
+     SET fecha_hora_cita = $1, lugar_cita = $2, motivo = $3, estado_cita = $4
+     WHERE id_cita = $5 AND id_paciente = $6
+     RETURNING id_cita AS id, id_paciente, id_profecional AS id_profesional, fecha_hora_cita AS fecha_hora, lugar_cita AS lugar, motivo, estado_cita AS estado`,
+    [cita.fecha_hora, cita.lugar || null, cita.motivo || null, cita.estado || 'Agendada', Number(idCita), Number(idPaciente)]
+  );
+  return resultado.rows[0] || null;
+}
+
+async function eliminarCitaPaciente(idPaciente, idCita) {
+  const pool = await connectDatabase();
+  if (!pool) return null;
+  await asegurarTablasPaciente(pool);
+  const resultado = await pool.query(
+    'DELETE FROM public.agendamiento_citas WHERE id_cita = $1 AND id_paciente = $2 RETURNING id_cita',
+    [Number(idCita), Number(idPaciente)]
   );
   return resultado.rows[0] || null;
 }
@@ -802,6 +843,41 @@ exports.createCitaPaciente = async (req, res) => {
   } catch (error) {
     console.error('Error al crear cita del paciente:', error);
     return res.status(500).json({ success: false, message: 'Error al crear la cita del paciente.' });
+  }
+};
+
+exports.updateCitaPaciente = async (req, res) => {
+  try {
+    const idPaciente = Number(req.params.id);
+    const idCita = Number(req.params.citaId);
+    const { fecha_hora, lugar, motivo, estado } = req.body;
+
+    if (!idPaciente || !idCita || !fecha_hora) {
+      return res.status(400).json({ success: false, message: 'ID de paciente, ID de cita y fecha/hora son obligatorios.' });
+    }
+
+    const cita = await actualizarCitaPaciente(idPaciente, idCita, { fecha_hora, lugar, motivo, estado });
+    if (!cita) {
+      return res.status(404).json({ success: false, message: 'Cita no encontrada o no se pudo actualizar.' });
+    }
+
+    return res.json({ success: true, item: cita });
+  } catch (error) {
+    console.error('Error al actualizar cita del paciente:', error);
+    return res.status(500).json({ success: false, message: 'Error al actualizar la cita del paciente.' });
+  }
+};
+
+exports.deleteCitaPaciente = async (req, res) => {
+  try {
+    const idPaciente = Number(req.params.id);
+    const idCita = Number(req.params.citaId);
+
+    await eliminarCitaPaciente(idPaciente, idCita);
+    return res.json({ success: true, message: 'Cita eliminada correctamente.' });
+  } catch (error) {
+    console.error('Error al eliminar cita del paciente:', error);
+    return res.status(500).json({ success: false, message: 'Error al eliminar la cita del paciente.' });
   }
 };
 

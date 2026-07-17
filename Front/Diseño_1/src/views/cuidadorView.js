@@ -1,5 +1,5 @@
 // src/views/cuidadorView.js
-import { obtenerDatosSeccion, obtenerPacientes, obtenerProfesionales, crearPaciente, obtenerPacienteDetalle, actualizarPaciente, obtenerBitacoraPlantillas, crearBitacoraPlantilla, obtenerBitacoraRegistros, crearBitacoraRegistro, obtenerMedicamentosPaciente, crearMedicamentoPaciente, actualizarMedicamentoPaciente, obtenerCitasPaciente, crearCitaPaciente } from '../services/data.service.js';
+import { obtenerDatosSeccion, obtenerPacientes, obtenerProfesionales, crearPaciente, obtenerPacienteDetalle, actualizarPaciente, obtenerBitacoraPlantillas, crearBitacoraPlantilla, obtenerBitacoraRegistros, crearBitacoraRegistro, obtenerMedicamentosPaciente, crearMedicamentoPaciente, actualizarMedicamentoPaciente, obtenerCitasPaciente, crearCitaPaciente, actualizarCitaPaciente, eliminarCitaPaciente } from '../services/data.service.js';
 import { cerrarSesion, obtenerSesionActiva } from '../services/auth.services.js';
 
 export function cuidadorView() {
@@ -69,6 +69,7 @@ export function cuidadorView() {
     setTimeout(() => {
         initCuidadorEvents(estructuraCuidadorBase);
         initLogoutEvents();
+        actualizarIndicadoresDeNotificacion();
     }, 0);
 
     // Activamos la clase layout-cuidador e inyectamos el botón hamburguesa con id="hamburguesa-toggle"
@@ -77,10 +78,10 @@ export function cuidadorView() {
             <aside class="sidebar sidebar-cuidador">
                 <div class="sidebar-logo">Zoe Care</div>
                 <nav class="sidebar-menu">
-                    <a href="#" class="menu-item active" data-view="dashboard"><i class="ti ti-smart-home"></i> Inicio Asistencia</a>
-                    <a href="#" class="menu-item" data-view="pacientes"><i class="ti ti-users"></i> Mis Pacientes</a>
+                    <a href="#" class="menu-item active" data-view="dashboard"><i class="ti ti-smart-home"></i> Inicio</a>
+                    <a href="#" class="menu-item" data-view="pacientes"><i class="ti ti-users"></i> Mis Pacientes <span class="notification-badge"></span></a>
                     <a href="#" class="menu-item" data-view="bitacora"><i class="ti ti-notes"></i> Bitácora Diaria</a>
-                    <a href="#" class="menu-item" data-view="citas"><i class="ti ti-calendar-event"></i> Citas</a>
+                    <a href="#" class="menu-item" data-view="citas"><i class="ti ti-calendar-event"></i> Citas <span class="notification-badge"></span></a>
                     <a href="#" class="menu-item" data-view="medicamentos"><i class="ti ti-pill"></i> Medicamentos</a>
                     <a href="#" class="menu-item" data-view="calendario"><i class="ti ti-calendar"></i> Calendario</a>
                     <a href="#/login" class="menu-item logout-item"><i class="ti ti-logout"></i> Cerrar Sesión</a>
@@ -156,6 +157,48 @@ function initCuidadorEvents(baseHtml) {
     initLogoutEvents();
 }
 
+async function actualizarIndicadoresDeNotificacion() {
+    const session = obtenerSesionActiva();
+    if (!session) return;
+
+    const pacientes = await obtenerPacientes(session.rol, session.email);
+
+    // Indicador para pacientes con alertas
+    const pacientesConAlerta = pacientes.some(p => p.nivel_alerta && p.nivel_alerta.toLowerCase() !== 'bajo' && p.nivel_alerta.toLowerCase() !== 'normal');
+    const badgePacientes = document.querySelector('.sidebar .menu-item[data-view="pacientes"] .notification-badge');
+    if (badgePacientes) {
+        badgePacientes.style.display = pacientesConAlerta ? 'block' : 'none';
+    }
+
+    // Indicador para citas de hoy
+    if (pacientes.length > 0) {
+        const citasPromises = pacientes.map(p => obtenerCitasPaciente(p.id));
+        const citasDeTodos = (await Promise.all(citasPromises)).flat();
+
+        const hoy = new Date();
+        const inicioHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+        const finHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + 1);
+
+        const hayCitasHoy = citasDeTodos.some(cita => {
+            const fechaCita = new Date(cita.fecha_hora);
+            return fechaCita >= inicioHoy && fechaCita < finHoy;
+        });
+
+        const badgeCitas = document.querySelector('.sidebar .menu-item[data-view="citas"] .notification-badge');
+        if (badgeCitas) {
+            badgeCitas.style.display = hayCitasHoy ? 'block' : 'none';
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
 function initLogoutEvents() {
     const logoutLink = document.querySelector('.sidebar-cuidador .logout-item');
     if (!logoutLink) return;
@@ -221,9 +264,9 @@ function openCrearPacienteModal(profesionales, emailCuidador) {
                     <option value="">Sin asignar</option>
                     ${profesionalesOptions}
                 </select></div>
-                <div class="form-actions" style="display:flex; gap:12px; justify-content:flex-end; margin-top: 12px;">
-                    <button type="button" id="cancelar-crear-paciente" class="btn-outline-login">Cancelar</button>
-                    <button type="submit" class="btn-submit">Guardar paciente</button>
+                <div class="form-actions">
+                    <button type="button" id="cancelar-crear-paciente" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar paciente</button>
                 </div>
                 <div id="paciente-form-error" style="margin-top:10px; color:#ef4444; display:none;"></div>
                 <div id="paciente-form-success" style="margin-top:10px; color:#2f855a; display:none;"></div>
@@ -298,9 +341,9 @@ function openCrearCitaModal(pacientes, onSuccess) {
                     <option value="Confirmada">Confirmada</option>
                     <option value="Pendiente">Pendiente</option>
                 </select></div>
-                <div class="form-actions" style="display:flex; gap:12px; justify-content:flex-end; margin-top: 12px;">
-                    <button type="button" id="cancelar-crear-cita" class="btn-outline-login">Cancelar</button>
-                    <button type="submit" class="btn-submit">Guardar cita</button>
+                <div class="form-actions">
+                    <button type="button" id="cancelar-crear-cita" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar cita</button>
                 </div>
                 <div id="cita-form-error" style="margin-top:10px; color:#ef4444; display:none;"></div>
                 <div id="cita-form-success" style="margin-top:10px; color:#2f855a; display:none;"></div>
@@ -359,6 +402,80 @@ function openCrearCitaModal(pacientes, onSuccess) {
     });
 }
 
+function openEditarCitaModal(cita, onSuccess) {
+    const fechaHoraLocal = new Date(cita.fecha_hora).toISOString().slice(0, 16);
+
+    const formHtml = `
+        <div class="card fade-in">
+            <h3>Editar cita de ${cita.paciente}</h3>
+            <form id="editar-cita-form" class="patient-form">
+                <div class="form-group"><label>Fecha y hora</label><input type="datetime-local" name="fecha_hora" value="${fechaHoraLocal}" required></div>
+                <div class="form-group"><label>Lugar</label><input type="text" name="lugar" value="${cita.lugar || ''}" placeholder="Opcional"></div>
+                <div class="form-group"><label>Motivo</label><textarea name="motivo" rows="3" placeholder="Opcional">${cita.motivo || ''}</textarea></div>
+                <div class="form-group"><label>Estado</label><select name="estado">
+                    <option value="Agendada" ${cita.estado === 'Agendada' ? 'selected' : ''}>Agendada</option>
+                    <option value="Confirmada" ${cita.estado === 'Confirmada' ? 'selected' : ''}>Confirmada</option>
+                    <option value="Pendiente" ${cita.estado === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
+                    <option value="Cancelada" ${cita.estado === 'Cancelada' ? 'selected' : ''}>Cancelada</option>
+                </select></div>
+                <div class="form-actions">
+                    <button type="button" id="cancelar-editar-cita" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                </div>
+                <div id="cita-form-error" style="margin-top:10px; color:#ef4444; display:none;"></div>
+                <div id="cita-form-success" style="margin-top:10px; color:#2f855a; display:none;"></div>
+            </form>
+        </div>
+    `;
+
+    openFloatingModal(formHtml);
+    const modalContent = document.getElementById('floating-modal-content');
+    if (!modalContent) return;
+
+    modalContent.querySelector('#cancelar-editar-cita')?.addEventListener('click', closeFloatingModal);
+    const form = modalContent.querySelector('#editar-cita-form');
+    form?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData(form);
+        const citaActualizada = {
+            fecha_hora: String(formData.get('fecha_hora') || '').trim(),
+            lugar: String(formData.get('lugar') || '').trim(),
+            motivo: String(formData.get('motivo') || '').trim(),
+            estado: String(formData.get('estado') || 'Agendada').trim()
+        };
+
+        const errorDiv = modalContent.querySelector('#cita-form-error');
+        const successDiv = modalContent.querySelector('#cita-form-success');
+        if (errorDiv) errorDiv.style.display = 'none';
+        if (successDiv) successDiv.style.display = 'none';
+
+        if (!citaActualizada.fecha_hora) {
+            if (errorDiv) {
+                errorDiv.textContent = 'La fecha y hora de la cita son obligatorias.';
+                errorDiv.style.display = 'block';
+            }
+            return;
+        }
+
+        const respuesta = await actualizarCitaPaciente(cita.id_paciente, cita.id, citaActualizada);
+        if (!respuesta.success) {
+            if (errorDiv) {
+                errorDiv.textContent = respuesta.message || 'No se pudo actualizar la cita.';
+                errorDiv.style.display = 'block';
+            }
+            return;
+        }
+
+        if (successDiv) successDiv.textContent = 'Cita actualizada con éxito.';
+        if (successDiv) successDiv.style.display = 'block';
+
+        setTimeout(() => {
+            closeFloatingModal();
+            if (typeof onSuccess === 'function') onSuccess();
+        }, 600);
+    });
+}
+
 function openCrearMedicamentoModal(idPaciente, onSuccess) {
     const formHtml = `
         <div class="card fade-in">
@@ -374,9 +491,9 @@ function openCrearMedicamentoModal(idPaciente, onSuccess) {
                     <option value="Suspendido">Suspendido</option>
                 </select></div>
                 <div class="form-group"><label>Fecha de inicio</label><input type="date" name="fecha_inicio" required></div>
-                <div class="form-actions" style="display:flex; gap:12px; justify-content:flex-end; margin-top: 12px;">
-                    <button type="button" id="cancelar-crear-medicamento" class="btn-outline-login">Cancelar</button>
-                    <button type="submit" class="btn-submit">Guardar medicamento</button>
+                <div class="form-actions">
+                    <button type="button" id="cancelar-crear-medicamento" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar medicamento</button>
                 </div>
                 <div id="medicamento-form-error" style="margin-top:10px; color:#ef4444; display:none;"></div>
                 <div id="medicamento-form-success" style="margin-top:10px; color:#2f855a; display:none;"></div>
@@ -451,9 +568,9 @@ function openEditarMedicamentoModal(idPaciente, medicamento, onSuccess) {
                     <option value="Suspendido" ${medicamento.estado === 'Suspendido' ? 'selected' : ''}>Suspendido</option>
                 </select></div>
                 <div class="form-group"><label>Fecha de inicio</label><input type="date" name="fecha_inicio" value="${medicamento.fecha_inicio || ''}" required></div>
-                <div class="form-actions" style="display:flex; gap:12px; justify-content:flex-end; margin-top: 12px;">
-                    <button type="button" id="cancelar-editar-medicamento" class="btn-outline-login">Cancelar</button>
-                    <button type="submit" class="btn-submit">Guardar cambios</button>
+                <div class="form-actions">
+                    <button type="button" id="cancelar-editar-medicamento" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
                 </div>
                 <div id="medicamento-form-error" style="margin-top:10px; color:#ef4444; display:none;"></div>
                 <div id="medicamento-form-success" style="margin-top:10px; color:#2f855a; display:none;"></div>
@@ -524,9 +641,9 @@ async function renderPacientesSection(container) {
             <div class="card paciente-card">
               <h4>${paciente.nombre}</h4>
               <p><strong>Fecha de nacimiento:</strong> ${paciente.fecha_nacimiento}</p>
-              <p><strong>Dirección:</strong> ${paciente.direccion || 'No registrada'}</p>
+              <p><strong>Dirección:</strong> ${paciente.direccion || 'No registrada'}</p> 
               <p><strong>Médico asignado:</strong> ${paciente.profesional_nombre || 'Sin médico asignado'}</p>
-              <button class="btn-detalles btn-ver-paciente" data-paciente-id="${paciente.id}" style="margin-top:10px;">Ver / Editar</button>
+              <button class="btn btn-secondary btn-ver-paciente" data-paciente-id="${paciente.id}">Ver / Editar</button>
             </div>
           `).join('')
         : '<div class="card fade-in"><p style="color:var(--text-muted);">No tienes pacientes asignados aún.</p></div>';
@@ -538,7 +655,7 @@ async function renderPacientesSection(container) {
                     <h3>Mis Pacientes</h3>
                     <p>Registra nuevos pacientes y relacionalos con un profesional.</p>
                 </div>
-                <button id="btn-crear-paciente" class="btn-detalles" style="padding: 0.8rem 1rem;">Crear paciente</button>
+                <button id="btn-crear-paciente" class="btn btn-primary">Crear paciente</button>
             </div>
         </div>
         <div id="pacientes-list" class="pacientes-list">${pacientesHtml}</div>
@@ -574,7 +691,7 @@ async function renderCitasSection(container) {
     })));
 
     const citas = citasPorPaciente.flatMap(({ paciente, citas }) =>
-        citas.map((cita) => ({ ...cita, paciente: paciente.nombre }))
+        citas.map((cita) => ({ ...cita, paciente: paciente.nombre, id_paciente: paciente.id }))
     );
 
     container.innerHTML = `
@@ -584,24 +701,47 @@ async function renderCitasSection(container) {
                     <h3>Gestión de Citas</h3>
                     <p>Registra nuevas citas para tus pacientes y revisa el historial programado.</p>
                 </div>
-                <button id="btn-crear-cita" class="btn-detalles" style="padding:0.85rem 1rem;">Crear cita</button>
+                <button id="btn-crear-cita" class="btn btn-primary">Crear cita</button>
             </div>
         </div>
         <div class="card fade-in">
             <h4>Citas próximas</h4>
             <div class="pacientes-list">
                 ${citas.length ? citas.map((cita) => `
-                    <div class="paciente-card">
+                    <div class="paciente-card" data-cita-id="${cita.id}">
                         <h4>${cita.paciente}</h4>
                         <p><strong>Fecha:</strong> ${new Date(cita.fecha_hora).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</p>
                         <p><strong>Hora:</strong> ${new Date(cita.fecha_hora).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</p>
                         <p><strong>Motivo:</strong> ${cita.motivo || 'No especificado'}</p>
                         <p><strong>Estado:</strong> ${cita.estado || 'Agendada'}</p>
+                        <div class="card-actions">
+                            <button class="btn btn-secondary btn-editar-cita">Editar</button>
+                            <button class="btn btn-danger btn-eliminar-cita">Eliminar</button>
+                        </div>
                     </div>
                 `).join('') : '<p style="color:var(--text-muted);">No hay citas registradas todavía.</p>'}
             </div>
         </div>
     `;
+
+    container.querySelectorAll('.btn-editar-cita').forEach(button => {
+        button.addEventListener('click', () => {
+            const citaId = Number(button.closest('.paciente-card').dataset.citaId);
+            const cita = citas.find(c => c.id === citaId);
+            if (cita) openEditarCitaModal(cita, () => renderCitasSection(container));
+        });
+    });
+
+    container.querySelectorAll('.btn-eliminar-cita').forEach(button => {
+        button.addEventListener('click', async () => {
+            const citaId = Number(button.closest('.paciente-card').dataset.citaId);
+            const cita = citas.find(c => c.id === citaId);
+            if (cita && confirm(`¿Estás seguro de que deseas eliminar la cita de ${cita.paciente} del ${new Date(cita.fecha_hora).toLocaleDateString()}?`)) {
+                await eliminarCitaPaciente(cita.id_paciente, cita.id);
+                renderCitasSection(container);
+            }
+        });
+    });
 
     document.getElementById('btn-crear-cita')?.addEventListener('click', () => {
         openCrearCitaModal(pacientes, () => renderCitasSection(container));
@@ -755,12 +895,12 @@ async function renderMedicamentosSection(container) {
                     <h3>Gestión de Medicamentos</h3>
                     <p>Revisa el tratamiento activo y registra nuevos medicamentos mediante un modal.</p>
                 </div>
-                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                    <div class="form-group" style="margin:0;">
+                <div class="section-actions">
+                    <div class="form-group-inline">
                         <label>Paciente</label>
                         <select id="medicamento-paciente-select">${pacienteOptions}</select>
                     </div>
-                    <button id="btn-registrar-medicamento" class="btn-detalles" style="padding:0.85rem 1rem;">Registrar medicamento</button>
+                    <button id="btn-registrar-medicamento" class="btn btn-primary">Registrar medicamento</button>
                 </div>
             </div>
         </div>
@@ -798,7 +938,7 @@ async function renderMedicamentoDetail(container, idPaciente) {
                 <p><strong>Estado:</strong> ${med.estado || 'En tratamiento'}</p>
                 <p><strong>Inicio:</strong> ${med.fecha_inicio || 'No especificado'}</p>
                 <p><strong>Registrado:</strong> ${med.fecha_registro ? new Date(med.fecha_registro).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour:'2-digit', minute:'2-digit' }) : 'No especificado'}</p>
-                <button class="btn-detalles btn-editar-medicamento" data-medicamento-id="${med.id}">Editar</button>
+                <button class="btn btn-secondary btn-editar-medicamento" data-medicamento-id="${med.id}">Editar</button>
             </div>
           `).join('')
         : '<p style="color:var(--text-muted);">Aún no hay tratamientos registrados para este paciente.</p>';
@@ -840,9 +980,9 @@ function renderCrearPacienteForm(container, profesionales, emailCuidador) {
                     <option value="">Sin asignar</option>
                     ${profesionalesOptions}
                 </select></div>
-                <div class="form-actions" style="display:flex; gap:12px; justify-content:flex-end; margin-top: 12px;">
-                    <button type="button" id="cancelar-crear-paciente" class="btn-outline-login">Cancelar</button>
-                    <button type="submit" class="btn-submit">Guardar paciente</button>
+                <div class="form-actions">
+                    <button type="button" id="cancelar-crear-paciente" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar paciente</button>
                 </div>
                 <div id="paciente-form-error" style="margin-top:10px; color:#ef4444; display:none;"></div>
                 <div id="paciente-form-success" style="margin-top:10px; color:#2f855a; display:none;"></div>
@@ -917,9 +1057,9 @@ async function renderPacienteDetalle(container, idPaciente, rol) {
                 <div class="form-group"><label>Nivel alerta</label><input type="text" name="nivel_alerta" value="${paciente.nivel_alerta || ''}"></div>
                 <div class="form-group"><label>Estado general</label><input type="text" name="estado_general" value="${paciente.estado_general || ''}"></div>
                 <div class="form-group"><label>Ubicación</label><input type="text" name="ubicacion" value="${paciente.ubicacion || ''}"></div>
-                <div class="form-actions" style="display:flex; gap:12px; justify-content:flex-end; margin-top: 12px;">
-                    <button type="button" id="volver-paciente-lista" class="btn-outline-login">Volver</button>
-                    <button type="submit" class="btn-submit">Guardar cambios</button>
+                <div class="form-actions">
+                    <button type="button" id="volver-paciente-lista" class="btn btn-secondary">Volver</button>
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
                 </div>
                 <div id="editar-paciente-error" style="margin-top:10px; color:#ef4444; display:none;"></div>
                 <div id="editar-paciente-success" style="margin-top:10px; color:#2f855a; display:none;"></div>
@@ -1011,12 +1151,12 @@ async function renderBitacoraSection(container) {
 
     container.innerHTML = `
         <div class="card fade-in" style="margin-bottom:18px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div class="section-header">
                 <div>
                     <h3>Bitácora diaria</h3>
                     <p>Gestiona la plantilla de bitácora y registra datos clínicos frecuentes del paciente.</p>
                 </div>
-                <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                <div class="form-group-inline">
                     <label style="font-weight:600;">Paciente:</label>
                     <select id="bitacora-paciente-select">${pacienteOptions}</select>
                 </div>
@@ -1076,12 +1216,12 @@ async function renderBitacoraDetail(container, idPaciente) {
 
     detailArea.innerHTML = `
         <div class="card fade-in" style="margin-bottom:18px;">
-            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; align-items:flex-start;">
+            <div class="section-header">
                 <div>
                     <h4>Plantilla de bitácora</h4>
                     <p>Define los datos generales que deseas capturar cada vez que registras la bitácora.</p>
                 </div>
-                <button id="btn-crear-plantilla" class="btn-detalles" style="padding:0.75rem 1rem;">Nueva plantilla</button>
+                <button id="btn-crear-plantilla" class="btn btn-primary">Nueva plantilla</button>
             </div>
             <ul class="plantilla-list" style="margin-top:14px; padding-left:18px;">${plantillasHtml}</ul>
         </div>
@@ -1115,11 +1255,11 @@ function renderPlantillaBuilder(idPaciente, detailArea) {
                 <div id="campos-dinamicos" class="form-group">
                     <label>Campos de registro</label>
                     <div class="dynamic-fields"></div>
-                    <button type="button" id="btn-agregar-campo" class="btn-outline-login" style="margin-top:8px;">Agregar campo</button>
+                    <button type="button" id="btn-agregar-campo" class="btn btn-secondary" style="margin-top:8px;">Agregar campo</button>
                 </div>
-                <div class="form-actions" style="display:flex; gap:12px; justify-content:flex-end; margin-top: 12px;">
-                    <button type="button" id="cancelar-plantilla" class="btn-outline-login">Cancelar</button>
-                    <button type="submit" class="btn-submit">Guardar plantilla</button>
+                <div class="form-actions">
+                    <button type="button" id="cancelar-plantilla" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar plantilla</button>
                 </div>
                 <div id="plantilla-error" style="margin-top:10px; color:#ef4444; display:none;"></div>
                 <div id="plantilla-success" style="margin-top:10px; color:#2f855a; display:none;"></div>
@@ -1200,7 +1340,7 @@ function addDynamicField(container, label = '', key = '') {
                 <option value="text">Texto</option>
                 <option value="number">Número</option>
             </select>
-            <button type="button" class="btn-outline-login btn-remove-campo">Eliminar</button>
+            <button type="button" class="btn btn-danger btn-remove-campo">Eliminar</button>
         </div>
     `;
 
@@ -1227,8 +1367,8 @@ async function renderRegistroForm(detailArea, idPaciente, idPlantilla, plantilla
             <form id="registro-form" class="patient-form">
                 ${fieldsHtml}
                 <div class="form-group"><label>Notas adicionales</label><textarea name="notas" rows="3"></textarea></div>
-                <div class="form-actions" style="display:flex; gap:12px; justify-content:flex-end; margin-top: 12px;">
-                    <button type="submit" class="btn-submit">Guardar registro</button>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Guardar registro</button>
                 </div>
                 <div id="registro-error" style="margin-top:10px; color:#ef4444; display:none;"></div>
                 <div id="registro-success" style="margin-top:10px; color:#2f855a; display:none;"></div>
