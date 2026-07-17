@@ -237,7 +237,7 @@ async function renderProfesionalPacientesSection(container) {
         button.addEventListener('click', async () => {
             const idPaciente = Number(button.dataset.pacienteId);
             if (!idPaciente) return;
-            await renderPacienteDetalle(container, idPaciente);
+            openPacienteDetalleModal(idPaciente);
         });
     });
 }
@@ -401,6 +401,38 @@ function initLogoutEvents() {
         cerrarSesion();
         window.location.hash = '#/login';
     });
+}
+
+function closeFloatingModal() {
+    document.getElementById('floating-modal-root')?.remove();
+}
+
+function openFloatingModal(contentHtml) {
+    closeFloatingModal();
+
+    const modalHtml = `
+        <div id="floating-modal-root" class="modal-overlay">
+            <div class="modal-dialog">
+                <button type="button" class="modal-close-btn" aria-label="Cerrar">&times;</button>
+                <div id="floating-modal-content" class="modal-content">${contentHtml}</div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const root = document.getElementById('floating-modal-root');
+    root?.querySelector('.modal-close-btn')?.addEventListener('click', closeFloatingModal);
+    root?.addEventListener('click', (event) => {
+        if (event.target === root) closeFloatingModal();
+    });
+}
+
+function openPacienteDetalleModal(idPaciente) {
+    openFloatingModal('<div id="modal-paciente-detail" class="modal-scrollable"></div>');
+    const modalContent = document.getElementById('modal-paciente-detail');
+    if (modalContent) {
+        renderPacienteDetalle(modalContent, idPaciente);
+    }
 }
 
 function limpiarSesionYRedirigir() {

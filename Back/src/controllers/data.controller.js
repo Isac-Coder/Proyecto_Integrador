@@ -19,6 +19,27 @@ function obtenerSeccionesPorRol(rol) {
         title: 'Bitácora de Novedades Diaria',
         description: 'Registra el comportamiento, alimentación y novedades del día.',
         items: []
+      },
+      citas: {
+        title: 'Gestión de Citas',
+        description: 'Agenda y seguimiento de visitas médicas programadas.',
+        items: [
+          {
+            paciente: 'Don Alberto Gómez',
+            fecha: '10 Jul 2026',
+            hora: '09:00 AM',
+            motivo: 'Evaluación mensual'
+          }
+        ]
+      },
+      calendario: {
+        title: 'Calendario de Monitoreo',
+        description: 'Visión semanal de actividades de cuidado.',
+        items: [
+          { dia: 'Lunes', actividad: 'Control de medicación' },
+          { dia: 'Miércoles', actividad: 'Revisión de signos vitales' },
+          { dia: 'Viernes', actividad: 'Informe familiar' }
+        ]
       }
     };
   }
@@ -74,12 +95,22 @@ async function asegurarTablasPaciente(pool) {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS public.pacientes (
       id_paciente SERIAL PRIMARY KEY,
-      nombre TEXT NOT NULL,
-      fecha_nacimiento DATE NOT NULL,
+      nombre TEXT,
+      fecha_nacimiento DATE,
       direccion TEXT,
       historial_medico TEXT,
       id_profecional INTEGER REFERENCES public.profecionales(id_profecional)
     )
+  `);
+
+  await pool.query(`
+    ALTER TABLE public.pacientes
+    ALTER COLUMN nombre DROP NOT NULL
+  `);
+
+  await pool.query(`
+    ALTER TABLE public.pacientes
+    ALTER COLUMN fecha_nacimiento DROP NOT NULL
   `);
 
   await pool.query(`
@@ -96,6 +127,11 @@ async function asegurarTablasPaciente(pool) {
       observaciones TEXT,
       CONSTRAINT uq_paciente_cuidador UNIQUE (id_paciente, id_cuidador)
     )
+  `);
+
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS asistencia_pacientes_id_paciente_id_cuidador_key
+    ON public.asistencia_pacientes (id_paciente, id_cuidador)
   `);
 
   await pool.query(`
@@ -145,8 +181,42 @@ async function asegurarTablasPaciente(pool) {
       nombre_medicamento TEXT,
       dosis TEXT,
       frecuencia TEXT,
-      fecha_inicio DATE
+      fecha_inicio DATE,
+      estado TEXT DEFAULT 'En tratamiento',
+      cantidad_dosis INTEGER,
+      fecha_registro TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
     )
+  `);
+
+  await pool.query(`
+    ALTER TABLE public.medicamentos_paciente
+    ADD COLUMN IF NOT EXISTS estado TEXT DEFAULT 'En tratamiento'
+  `);
+
+  await pool.query(`
+    ALTER TABLE public.medicamentos_paciente
+    ADD COLUMN IF NOT EXISTS cantidad_dosis INTEGER
+  `);
+
+  await pool.query(`
+    ALTER TABLE public.medicamentos_paciente
+    ADD COLUMN IF NOT EXISTS fecha_registro TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS public.agendamiento_citas (
+      id_cita SERIAL PRIMARY KEY,
+      id_paciente INTEGER NOT NULL REFERENCES public.pacientes(id_paciente) ON DELETE CASCADE,
+      id_profecional INTEGER REFERENCES public.profecionales(id_profecional),
+      fecha_hora_cita TIMESTAMP WITHOUT TIME ZONE,
+      lugar_cita TEXT,
+      motivo TEXT,
+      estado_cita VARCHAR(30)
+    )
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_citas_paciente ON public.agendamiento_citas USING btree (id_paciente)
   `);
 
   await pool.query(`
@@ -255,8 +325,19 @@ async function crearPacienteConRelacion(datos) {
   await asegurarTablasPaciente(pool);
 
   const insertPaciente = await pool.query(
-    'INSERT INTO public.pacientes (nombre, fecha_nacimiento, direccion, historial_medico, id_profecional) VALUES ($1, $2, $3, $4, $5) RETURNING id_paciente AS id, nombre, fecha_nacimiento, direccion, historial_medico, id_profecional',
-    [String(datos.nombre).trim(), datos.fecha_nacimiento, datos.direccion || null, datos.historial_medico || null, datos.id_profecional || null]
+    'INSERT INTO public.pacientes (nombre, fecha_nacimiento, direccion, historial_medico, horario_monitoreo, observaciones, nivel_alerta, estado_general, ubicacion, id_profecional) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id_paciente AS id, nombre, fecha_nacimiento, direccion, historial_medico, id_profecional',
+    [
+      datos.nombre || null,
+      datos.fecha_nacimiento || null,
+      datos.direccion || null,
+      datos.historial_medico || null,
+      datos.horario_monitoreo || null,
+      datos.observaciones || null,
+      datos.nivel_alerta || null,
+      datos.estado_general || null,
+      datos.ubicacion || null,
+      datos.id_profecional || null
+    ]
   );
 
   const paciente = insertPaciente.rows[0];
@@ -320,6 +401,35 @@ async function obtenerBitacoraRegistros(idPaciente) {
   return resultado.rows;
 }
 
+async function obtenerCitasPaciente(idPaciente) {
+  const pool = await connectDatabase();
+  if (!pool) return [];
+  await asegurarTablasPaciente(pool);
+  const resultado = await pool.query(
+    `SELECT id_cita AS id, id_paciente, id_profecional AS id_profesional, fecha_hora_cita AS fecha_hora, lugar_cita AS lugar, motivo, estado_cita AS estado
+     FROM public.agendamiento_citas
+     WHERE id_paciente = $1
+     ORDER BY fecha_hora ASC`,
+    [Number(idPaciente)]
+  );
+  return resultado.rows;
+}
+
+async function crearCitaPaciente(idPaciente, cita) {
+  const pool = await connectDatabase();
+  if (!pool) return null;
+  await asegurarTablasPaciente(pool);
+
+  const paciente = await pool.query('SELECT id_profecional FROM public.pacientes WHERE id_paciente = $1', [Number(idPaciente)]);
+  const idProf = paciente.rows[0]?.id_profecional || null;
+
+  const resultado = await pool.query(
+    'INSERT INTO public.agendamiento_citas (id_paciente, id_profecional, fecha_hora_cita, lugar_cita, motivo, estado_cita) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id_cita AS id, id_paciente, id_profecional AS id_profesional, fecha_hora_cita AS fecha_hora, lugar_cita AS lugar, motivo, estado_cita AS estado',
+    [Number(idPaciente), idProf, cita.fecha_hora, cita.lugar || null, cita.motivo || null, cita.estado || 'Agendada']
+  );
+  return resultado.rows[0] || null;
+}
+
 async function crearBitacoraRegistro(idPaciente, registro) {
   const pool = await connectDatabase();
   if (!pool) return null;
@@ -327,6 +437,50 @@ async function crearBitacoraRegistro(idPaciente, registro) {
   const resultado = await pool.query(
     'INSERT INTO public.bitacora_registros (id_paciente, id_plantilla, valores, notas) VALUES ($1, $2, $3, $4) RETURNING id_registro AS id, id_paciente, id_plantilla, valores, notas, fecha_registro',
     [Number(idPaciente), registro.id_plantilla ? Number(registro.id_plantilla) : null, JSON.stringify(registro.valores), registro.notas || null]
+  );
+  return resultado.rows[0] || null;
+}
+
+async function obtenerMedicamentosPaciente(idPaciente) {
+  const pool = await connectDatabase();
+  if (!pool) return [];
+  await asegurarTablasPaciente(pool);
+  const resultado = await pool.query(
+    `SELECT id_medicamento AS id, nombre_medicamento AS nombre, dosis, frecuencia, fecha_inicio, estado, cantidad_dosis, fecha_registro
+     FROM public.medicamentos_paciente
+     WHERE id_paciente = $1
+     ORDER BY fecha_registro DESC, id_medicamento DESC`,
+    [Number(idPaciente)]
+  );
+  return resultado.rows;
+}
+
+async function crearMedicamentoPaciente(idPaciente, medicamento) {
+  const pool = await connectDatabase();
+  if (!pool) return null;
+  await asegurarTablasPaciente(pool);
+  const resultado = await pool.query(
+    'INSERT INTO public.medicamentos_paciente (id_paciente, nombre_medicamento, dosis, frecuencia, fecha_inicio, estado, cantidad_dosis, fecha_registro) VALUES ($1, $2, $3, $4, $5, $6, $7, COALESCE($8, CURRENT_TIMESTAMP)) RETURNING id_medicamento AS id, id_paciente, nombre_medicamento AS nombre, dosis, frecuencia, fecha_inicio, estado, cantidad_dosis, fecha_registro',
+    [Number(idPaciente), String(medicamento.nombre_medicamento).trim(), String(medicamento.dosis).trim(), String(medicamento.frecuencia).trim(), medicamento.fecha_inicio || null, String(medicamento.estado || 'En tratamiento').trim(), medicamento.cantidad_dosis ? Number(medicamento.cantidad_dosis) : null, medicamento.fecha_registro || null]
+  );
+  return resultado.rows[0] || null;
+}
+
+async function actualizarMedicamentoPaciente(idPaciente, idMedicamento, medicamento) {
+  const pool = await connectDatabase();
+  if (!pool) return null;
+  await asegurarTablasPaciente(pool);
+  const resultado = await pool.query(
+    `UPDATE public.medicamentos_paciente
+     SET nombre_medicamento = $1,
+         dosis = $2,
+         frecuencia = $3,
+         estado = $4,
+         cantidad_dosis = $5,
+         fecha_inicio = $6
+     WHERE id_medicamento = $7 AND id_paciente = $8
+     RETURNING id_medicamento AS id, id_paciente, nombre_medicamento AS nombre, dosis, frecuencia, fecha_inicio, estado, cantidad_dosis, fecha_registro`,
+    [String(medicamento.nombre_medicamento).trim(), String(medicamento.dosis).trim(), String(medicamento.frecuencia).trim(), String(medicamento.estado || 'En tratamiento').trim(), medicamento.cantidad_dosis ? Number(medicamento.cantidad_dosis) : null, medicamento.fecha_inicio || null, Number(idMedicamento), Number(idPaciente)]
   );
   return resultado.rows[0] || null;
 }
@@ -513,10 +667,10 @@ exports.updatePaciente = async (req, res) => {
 };
 
 exports.createPaciente = async (req, res) => {
-  const { nombre, fecha_nacimiento, direccion, historial_medico, email_cuidador, id_profecional } = req.body;
+  const { nombre, fecha_nacimiento, direccion, historial_medico, horario_monitoreo, observaciones, nivel_alerta, estado_general, ubicacion, email_cuidador, id_profecional } = req.body;
 
-  if (!nombre || !fecha_nacimiento || !email_cuidador) {
-    return res.status(400).json({ success: false, message: 'Nombre, fecha de nacimiento y correo del cuidador son obligatorios.' });
+  if (!email_cuidador) {
+    return res.status(400).json({ success: false, message: 'El correo del cuidador es obligatorio para relacionar el paciente.' });
   }
 
   try {
@@ -526,10 +680,15 @@ exports.createPaciente = async (req, res) => {
     }
 
     const paciente = await crearPacienteConRelacion({
-      nombre,
-      fecha_nacimiento,
-      direccion,
-      historial_medico,
+      nombre: nombre || null,
+      fecha_nacimiento: fecha_nacimiento || null,
+      direccion: direccion || null,
+      historial_medico: historial_medico || null,
+      horario_monitoreo: horario_monitoreo || null,
+      observaciones: observaciones || null,
+      nivel_alerta: nivel_alerta || null,
+      estado_general: estado_general || null,
+      ubicacion: ubicacion || null,
       id_cuidador: cuidador.id,
       id_profecional: id_profecional || null
     });
@@ -614,6 +773,38 @@ exports.getBitacoraRegistros = async (req, res) => {
   }
 };
 
+exports.getCitasPaciente = async (req, res) => {
+  try {
+    const idPaciente = Number(req.params.id);
+    if (!idPaciente) {
+      return res.status(400).json({ success: false, message: 'ID de paciente inválido.' });
+    }
+
+    const citas = await obtenerCitasPaciente(idPaciente);
+    return res.json({ success: true, items: citas });
+  } catch (error) {
+    console.error('Error al consultar citas del paciente:', error);
+    return res.status(500).json({ success: false, message: 'Error al cargar las citas del paciente.' });
+  }
+};
+
+exports.createCitaPaciente = async (req, res) => {
+  try {
+    const idPaciente = Number(req.params.id);
+    const { fecha_hora, lugar, motivo, estado } = req.body;
+
+    if (!idPaciente || !fecha_hora) {
+      return res.status(400).json({ success: false, message: 'ID de paciente y fecha/hora de cita son obligatorios.' });
+    }
+
+    const cita = await crearCitaPaciente(idPaciente, { fecha_hora, lugar, motivo, estado });
+    return res.status(201).json({ success: true, item: cita });
+  } catch (error) {
+    console.error('Error al crear cita del paciente:', error);
+    return res.status(500).json({ success: false, message: 'Error al crear la cita del paciente.' });
+  }
+};
+
 exports.createBitacoraRegistro = async (req, res) => {
   try {
     const idPaciente = Number(req.params.id);
@@ -628,5 +819,59 @@ exports.createBitacoraRegistro = async (req, res) => {
   } catch (error) {
     console.error('Error al crear registro de bitácora:', error);
     return res.status(500).json({ success: false, message: 'Error al crear el registro de bitácora.' });
+  }
+};
+
+exports.getMedicamentosPaciente = async (req, res) => {
+  try {
+    const idPaciente = Number(req.params.id);
+    if (!idPaciente) {
+      return res.status(400).json({ success: false, message: 'ID de paciente inválido.' });
+    }
+
+    const medicamentos = await obtenerMedicamentosPaciente(idPaciente);
+    return res.json({ success: true, items: medicamentos });
+  } catch (error) {
+    console.error('Error al consultar medicamentos del paciente:', error);
+    return res.status(500).json({ success: false, message: 'Error al cargar los medicamentos del paciente.' });
+  }
+};
+
+exports.createMedicamentoPaciente = async (req, res) => {
+  try {
+    const idPaciente = Number(req.params.id);
+    const { nombre_medicamento, dosis, frecuencia, estado, cantidad_dosis, fecha_inicio } = req.body;
+
+    if (!idPaciente || !nombre_medicamento || !dosis || !frecuencia || !fecha_inicio || !cantidad_dosis) {
+      return res.status(400).json({ success: false, message: 'Todos los campos de medicación son obligatorios.' });
+    }
+
+    const medicamento = await crearMedicamentoPaciente(idPaciente, { nombre_medicamento, dosis, frecuencia, estado, cantidad_dosis, fecha_inicio });
+    return res.status(201).json({ success: true, item: medicamento });
+  } catch (error) {
+    console.error('Error al crear medicamento del paciente:', error);
+    return res.status(500).json({ success: false, message: 'Error al crear el medicamento del paciente.' });
+  }
+};
+
+exports.updateMedicamentoPaciente = async (req, res) => {
+  try {
+    const idPaciente = Number(req.params.id);
+    const idMedicamento = Number(req.params.medicamentoId);
+    const { nombre_medicamento, dosis, frecuencia, estado, cantidad_dosis, fecha_inicio } = req.body;
+
+    if (!idPaciente || !idMedicamento || !nombre_medicamento || !dosis || !frecuencia || !fecha_inicio || !cantidad_dosis) {
+      return res.status(400).json({ success: false, message: 'Todos los campos de medicación son obligatorios.' });
+    }
+
+    const medicamento = await actualizarMedicamentoPaciente(idPaciente, idMedicamento, { nombre_medicamento, dosis, frecuencia, estado, cantidad_dosis, fecha_inicio });
+    if (!medicamento) {
+      return res.status(404).json({ success: false, message: 'Medicamento no encontrado.' });
+    }
+
+    return res.json({ success: true, item: medicamento });
+  } catch (error) {
+    console.error('Error al actualizar medicamento del paciente:', error);
+    return res.status(500).json({ success: false, message: 'Error al actualizar el medicamento del paciente.' });
   }
 };

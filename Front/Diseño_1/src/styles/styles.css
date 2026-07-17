@@ -686,6 +686,210 @@ body {
   border-color: #FFFFFF;
 }
 
+.patient-form {
+  display: grid;
+  gap: 16px;
+}
+.patient-form .form-group {
+  display: grid;
+  gap: 8px;
+}
+.patient-form .form-group label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #333;
+}
+.patient-form .form-group input,
+.patient-form .form-group select,
+.patient-form .form-group textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #d3d7dc;
+  border-radius: 14px;
+  background-color: #fafbfc;
+  color: #1f2937;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.patient-form .form-group input:focus,
+.patient-form .form-group select:focus,
+.patient-form .form-group textarea:focus {
+  border-color: #d2967f;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(210, 150, 127, 0.12);
+}
+.patient-form .form-group textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+.btn-submit {
+  background-color: #d2967f;
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 22px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(210, 150, 127, 0.18);
+}
+.btn-submit:hover {
+  background-color: #bc7a6b;
+}
+.btn-outline-login {
+  background-color: transparent;
+  border: 1px solid #d3d7dc;
+  color: #465453;
+  border-radius: 14px;
+  padding: 14px 22px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-outline-login:hover {
+  background-color: rgba(210, 150, 127, 0.12);
+  border-color: #d2967f;
+}
+.pacientes-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+.paciente-card {
+  border: 1px solid #e6e9ef;
+  border-radius: 22px;
+  padding: 20px;
+  background: linear-gradient(180deg, #ffffff 0%, #fdfcfb 100%);
+}
+.paciente-card h4 {
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+  letter-spacing: -0.3px;
+}
+.paciente-card p {
+  font-size: 0.95rem;
+  color: #4b5563;
+  margin-bottom: 8px;
+}
+.paciente-card button {
+  margin-top: 14px;
+}
+.registro-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 18px;
+  background-color: #ffffff;
+}
+.registro-card .registro-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.registro-card .registro-header h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+.registro-card .registro-header span {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+.registro-card .registro-body {
+  display: grid;
+  gap: 14px;
+}
+.registro-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+.registro-value {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background-color: #f8fafc;
+  border: 1px solid #e5e7eb;
+}
+.registro-value strong {
+  display: block;
+  font-size: 0.88rem;
+  color: #374151;
+  margin-bottom: 4px;
+}
+.registro-value span {
+  color: #111827;
+  font-size: 0.95rem;
+}
+.registro-notas {
+  margin: 0;
+  color: #374151;
+  line-height: 1.6;
+}
+.plantilla-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+.plantilla-item {
+  cursor: pointer;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+  transition: all 0.2s ease;
+}
+.plantilla-item:hover {
+  background-color: #ffffff;
+  transform: translateY(-1px);
+}
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 15, 25, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 2000;
+}
+.modal-dialog {
+  width: min(100%, 840px);
+  max-height: 92vh;
+  overflow: auto;
+  border-radius: 28px;
+  background-color: #ffffff;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.2);
+  position: relative;
+}
+.modal-close-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: #f8fafc;
+  color: #374151;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+.modal-content {
+  padding: 28px;
+}
+.modal-content h3,
+.modal-content h4 {
+  margin-top: 0;
+}
+.modal-scrollable {
+  display: grid;
+  gap: 20px;
+}
+
 /* --- Módulo de Signos Vitales --- */
 .vitals-grid {
   display: grid;

@@ -140,6 +140,76 @@ export async function obtenerBitacoraRegistros(idPaciente) {
     }
 }
 
+export async function obtenerMedicamentosPaciente(idPaciente) {
+    try {
+        const response = await fetch(`${API_URL}/data/pacientes/${idPaciente}/medicamentos`);
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'No se pudieron cargar los medicamentos del paciente.');
+        }
+        return data.items || [];
+    } catch (error) {
+        console.error('Error al cargar medicamentos del paciente:', error);
+        return [];
+    }
+}
+
+export async function crearMedicamentoPaciente(idPaciente, medicamento) {
+    try {
+        const response = await fetch(`${API_URL}/data/pacientes/${idPaciente}/medicamentos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(medicamento)
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Error al crear el medicamento del paciente:', error);
+        return { success: false, message: 'No se pudo crear el medicamento del paciente.' };
+    }
+}
+
+export async function actualizarMedicamentoPaciente(idPaciente, medicamentoId, medicamento) {
+    try {
+        const response = await fetch(`${API_URL}/data/pacientes/${idPaciente}/medicamentos/${medicamentoId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(medicamento)
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Error al actualizar el medicamento del paciente:', error);
+        return { success: false, message: 'No se pudo actualizar el medicamento del paciente.' };
+    }
+}
+
+export async function obtenerCitasPaciente(idPaciente) {
+    try {
+        const response = await fetch(`${API_URL}/data/pacientes/${idPaciente}/citas`);
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'No se pudieron cargar las citas del paciente.');
+        }
+        return data.items || [];
+    } catch (error) {
+        console.error('Error al cargar citas del paciente:', error);
+        return [];
+    }
+}
+
+export async function crearCitaPaciente(idPaciente, cita) {
+    try {
+        const response = await fetch(`${API_URL}/data/pacientes/${idPaciente}/citas`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(cita)
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Error al crear la cita del paciente:', error);
+        return { success: false, message: 'No se pudo crear la cita del paciente.' };
+    }
+}
+
 export async function crearBitacoraRegistro(idPaciente, registro) {
     try {
         const response = await fetch(`${API_URL}/data/pacientes/${idPaciente}/bitacora/registros`, {

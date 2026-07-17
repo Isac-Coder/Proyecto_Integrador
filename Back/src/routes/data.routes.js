@@ -12,6 +12,11 @@ router.get('/pacientes/:id/bitacora/plantillas', controller.getBitacoraPlantilla
 router.post('/pacientes/:id/bitacora/plantillas', controller.createBitacoraPlantilla);
 router.get('/pacientes/:id/bitacora/registros', controller.getBitacoraRegistros);
 router.post('/pacientes/:id/bitacora/registros', controller.createBitacoraRegistro);
+router.get('/pacientes/:id/medicamentos', controller.getMedicamentosPaciente);
+router.post('/pacientes/:id/medicamentos', controller.createMedicamentoPaciente);
+router.put('/pacientes/:id/medicamentos/:medicamentoId', controller.updateMedicamentoPaciente);
+router.get('/pacientes/:id/citas', controller.getCitasPaciente);
+router.post('/pacientes/:id/citas', controller.createCitaPaciente);
 router.post('/pacientes', controller.createPaciente);
 router.put('/paciente/:id', controller.updatePaciente);
 router.post('/pacientes/:id/relacionar-profesional', controller.assignPacienteProfesional);
