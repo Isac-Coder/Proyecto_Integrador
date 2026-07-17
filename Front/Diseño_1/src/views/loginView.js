@@ -18,6 +18,12 @@ export function loginView() {
 
     return `
         <div class="login-container">
+            <div class="video-background">
+                <video autoplay muted loop playsinline class="background-video-element">
+                    <source src="./video/backgroun_Video.mp4" type="video/mp4">
+                </video>
+            </div>
+
             <div class="login-card">
                 <div class="login-header">
                     <div class="login-logo"></div>

@@ -17,9 +17,14 @@ export function registerView() {
 
     return `
         <div class="login-container">
+            <div class="video-background">
+                <video autoplay muted loop playsinline class="background-video-element">
+                    <source src="./video/backgroun_Video.mp4" type="video/mp4">
+                </video>
+            </div>
             <div class="login-card" style="max-width: 500px;">
                 <div class="login-header">
-                    <div class="login-logo">Zoe Care</div>
+                    <div class="login-logo"></div>
                     <h1>Crear Cuenta</h1>
                     <p>Regístrate en la plataforma para coordinar y monitorear la asistencia médica.</p>
                     <div id="register-success" style="color: #2b4c3f; background: #e6f4ea; padding: 10px; border-radius: 4px; font-size: 0.9rem; margin-top: 10px; font-weight: 600; display: none;"></div>
