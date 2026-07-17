@@ -20,7 +20,7 @@ export function loginView() {
         <div class="login-container">
             <div class="login-card">
                 <div class="login-header">
-                    <div class="login-logo">Zoe Care</div>
+                    <div class="login-logo"></div>
                     <h1>Iniciar Sesión</h1>
                     <p>Por favor, ingresa tus credenciales para acceder a la plataforma médica.</p>
                     <div id="error-message" style="color: #ef4444; font-size: 0.9rem; margin-top: 10px; font-weight: 600; display: none;"></div>

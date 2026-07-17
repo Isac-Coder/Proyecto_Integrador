@@ -14,7 +14,7 @@
 body {
   background-color: #E3DDD5;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  color: #3B4443;
+  color: #021412;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden; }
 
@@ -167,127 +167,119 @@ body {
 /* ==========================================================================
    5. VISTAS: LOGIN & REGISTER (FORMULARIOS DE ACCESO)
    ========================================================================== */
+/* Contenedor principal con fondo suave y gradiente */
+/* Contenedor principal con fondo suave y gradiente */
+/* Paleta de colores aplicada a la estructura */
 .login-container {
-  background-color: #E3DDD5;
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 24px; }
-  .login-container .login-card {
-    background-color: #FFFFFF;
-    padding: 44px 40px;
-    border-radius: 16px;
-    width: 100%;
-    max-width: 460px;
-    box-shadow: 0 12px 40px rgba(59, 68, 67, 0.05);
-    border: 1px solid rgba(59, 68, 67, 0.03); }
-  .login-container .login-header {
-    text-align: center;
-    margin-bottom: 32px; }
-    .login-container .login-header .login-logo {
-      font-family: 'Playfair Display', serif;
-      font-size: 2.2rem;
-      font-weight: 700;
-      color: #465453;
-      margin-bottom: 12px;
-      letter-spacing: -0.5px; }
-    .login-container .login-header h1 {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: #3B4443;
-      margin-bottom: 6px; }
-    .login-container .login-header p {
-      font-size: 0.9rem;
-      color: rgba(59, 68, 67, 0.6);
-      line-height: 1.5; }
-  .login-container .login-form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px; }
-    .login-container .login-form .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px; }
-      .login-container .login-form .form-group label {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #3B4443; }
-      .login-container .login-form .form-group input, .login-container .login-form .form-group select {
-        padding: 14px 16px;
-        border: 1.5px solid #d1d5db;
-        border-radius: 8px;
-        font-size: 0.95rem;
-        font-family: inherit;
-        color: #3B4443;
-        background-color: #fafafa;
-        outline: none;
-        transition: all 0.25s ease-in-out; }
-        .login-container .login-form .form-group input:focus, .login-container .login-form .form-group select:focus {
-          background-color: #FFFFFF;
-          border-color: #465453;
-          box-shadow: 0 0 0 3px rgba(70, 84, 83, 0.08); }
-    .login-container .login-form .register-invite {
-      text-align: center;
-      margin: 4px 0; }
-      .login-container .login-form .register-invite p {
-        font-size: 0.88rem;
-        color: rgba(59, 68, 67, 0.6); }
-        .login-container .login-form .register-invite p a {
-          color: #465453;
-          font-weight: 700;
-          text-decoration: none;
-          border-bottom: 1.5px dashed rgba(70, 84, 83, 0.3); }
-          .login-container .login-form .register-invite p a:hover {
-            color: #D2967F;
-            border-bottom-color: #D2967F; }
-    .login-container .login-form .form-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 12px;
-      gap: 16px; }
-      .login-container .login-form .form-actions .btn {
-        padding: 12px 24px;
-        font-size: 0.9rem;
-        font-weight: 700;
-        border-radius: 8px;
-        cursor: pointer;
-        text-decoration: none;
-        transition: all 0.25s ease-in-out;
-        text-align: center;
-        flex: 1; }
-      .login-container .login-form .form-actions .btn-solid-login {
-        background-color: #D2967F;
-        color: #FFFFFF;
-        border: none;
-        box-shadow: 0 4px 12px rgba(210, 150, 127, 0.15); }
-        .login-container .login-form .form-actions .btn-solid-login:hover {
-          background-color: #ca8368;
-          transform: translateY(-1px); }
-      .login-container .login-form .form-actions .btn-outline-login {
-        background-color: transparent;
-        color: rgba(59, 68, 67, 0.6);
-        border: 1.5px solid #e2e8f0; }
-        .login-container .login-form .form-actions .btn-outline-login:hover {
-          background-color: #f8fafc;
-          color: #3B4443;
-          border-color: #cbd5e1; }
+  padding: 24px;
+  background-color: #fdfaf8;
+}
 
-.alert-box {
-  padding: 12px 16px;
-  border-radius: 8px;
+.login-card {
+  background-color: #FFFFFF;
+  padding: 60px 50px;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 450px;
+  /* Sombra más pronunciada para efecto flotante */
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+}
+
+.login-header {
+  text-align: center; /* Título centrado */
+  margin-top: 30;
+  margin-bottom: 40px;
+  color:#353137
+}
+h1 {
+  margin-bottom: 28px;
+  color:#542f99
+}
+.login-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #8a63d2; /* Color morado */
+  margin-bottom: 12px;
+}
+
+.login-description {
   font-size: 0.9rem;
-  margin-top: 16px;
-  font-weight: 600;
-  line-height: 1.4;
-  text-align: center;
-  animation: fadeIn 0.3s ease-in-out; }
-  .alert-box.alert-success {
-    color: #16a34a;
-    background-color: #f0fdf4;
-    border: 1px solid #bbf7d0; }
+  color: rgba(5, 82, 73, 0.7);
+  line-height: 1.5;
+  margin-bottom: 30px;
+}
 
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #3B4443;
+  margin-bottom: 6px;
+}
+
+.form-group input {
+  padding: 16px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  background-color: #fafafa;
+  font-size: 1rem;
+}
+
+.form-group input:focus {
+  border-color: #0a5f5f;
+  outline: none;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 30px;
+}
+
+button {
+  background-color: #0a5f5f;
+  color: #FFFFFF;
+  padding: 16px 30px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+ 
+
+.button:hover {
+  background-color: #0a5f5f;
+  color: #FFFFFF;
+  border-color: #0a5f5f;
+}
+
+.link-back {
+  color: #0a5f5f;
+  text-decoration: underline;
+  font-size: 0.9rem;
+}
+
+.register-invite p {
+  font-size: 0.85rem;
+  color: rgba(59, 68, 67, 0.7);
+}
 /* ==========================================================================
    6. INFRAESTRUCTURA: LAYOUT DE DASHBOARD CON SIDEBAR FLOTANTE GLASSMORPHISM
    ========================================================================== */
