@@ -1,5 +1,6 @@
 // src/views/medicoView.js
-import { obtenerDatosSeccion } from '../services/data.service.js';
+import { obtenerDatosSeccion, obtenerPacientes, asignarPacienteProfesional, obtenerPacienteDetalle, actualizarPaciente, obtenerCitasPaciente } from '../services/data.service.js';
+import { cerrarSesion, obtenerSesionActiva } from '../services/auth.services.js';
 
 export function profesionalView() {
     // Unificamos el punto de carga de estilos al CSS compilado centralizado
@@ -10,6 +11,9 @@ export function profesionalView() {
         styleLink.href = '/Proyecto_Integrador/Front/Diseño_1/src/styles/styles.css';
         document.head.appendChild(styleLink);
     }
+
+    // Obtener fecha dinámica
+    const fechaActual = obtenerFechaFormateada();
 
     const estructuraDashboardBase = `
         <div class="dashboard-grid fade-in">
@@ -101,9 +105,9 @@ export function profesionalView() {
 
     setTimeout(() => {
         initProfesionalDashboardEvents(estructuraDashboardBase);
+        actualizarIndicadoresDeNotificacion();
     }, 0);
 
-    // Activamos la clase layout-profesional e inyectamos el botón hamburguesa con id="hamburguesa-toggle"
     return `
         <div class="dashboard-layout layout-profesional">
             
@@ -111,12 +115,13 @@ export function profesionalView() {
                 <div class="sidebar-logo">Zoe Care</div>
                 <nav class="sidebar-menu">
                     <a href="#" class="menu-item active" data-view="dashboard"><i class="ti ti-smart-home"></i> Dashboard</a>
-                    <a href="#" class="menu-item" data-view="citas"><i class="ti ti-calendar-event"></i> Citas / Visitas</a>
+                    <a href="#" class="menu-item" data-view="pacientes"><i class="ti ti-users"></i> Mis Pacientes <span class="notification-badge"></span></a>
+                    <a href="#" class="menu-item" data-view="citas"><i class="ti ti-calendar-event"></i> Citas / Visitas <span class="notification-badge"></span></a>
                     <a href="#" class="menu-item" data-view="mensajes"><i class="ti ti-message-circle"></i> Mensajes</a>
                     <a href="#" class="menu-item" data-view="resultados"><i class="ti ti-file-report"></i> Resultados</a>
                     <a href="#" class="menu-item" data-view="medicacion"><i class="ti ti-pill"></i> Indicaciones</a>
                     <a href="#" class="menu-item" data-view="perfil"><i class="ti ti-user"></i> Mi Perfil</a>
-                    <a href="#/" class="menu-item logout-item"><i class="ti ti-logout"></i> Cerrar Sesión</a>
+                    <a href="#/login" class="menu-item logout-item"><i class="ti ti-logout"></i> Cerrar Sesión</a>
                 </nav>
             </aside>
 
@@ -129,7 +134,7 @@ export function profesionalView() {
                     </button>
                     <div class="welcome-text">
                         <h2>Bienvenido Profesional</h2>
-                        <span class="current-date">Viernes, 10 julio 2026</span>
+                        <span class="current-date">${fechaActual}</span>
                     </div>
                     <div class="header-actions-group">
                         <div class="header-search">
@@ -146,6 +151,20 @@ export function profesionalView() {
             </div>
         </div>
     `;
+}
+
+// Función para obtener la fecha formateada
+function obtenerFechaFormateada() {
+    const ahora = new Date();
+    const opciones = {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    };
+    let fecha = ahora.toLocaleDateString('es-ES', opciones);
+    // Capitalizar primera letra
+    return fecha.charAt(0).toUpperCase() + fecha.slice(1);
 }
 
 function initProfesionalDashboardEvents(dashboardBaseHtml) {
@@ -165,6 +184,9 @@ function initProfesionalDashboardEvents(dashboardBaseHtml) {
             if (vistaSolicitada === 'dashboard') {
                 contentArea.innerHTML = dashboardBaseHtml;
                 initCardButtonsEvents();
+            } else if (vistaSolicitada === 'pacientes') {
+                contentArea.innerHTML = '<div class="card fade-in" style="text-align:center;"><p style="color:var(--text-muted); font-weight:600;">Cargando pacientes...</p></div>';
+                await renderProfesionalPacientesSection(contentArea);
             } else {
                 contentArea.innerHTML = '<div class="card fade-in" style="text-align:center;"><p style="color:var(--text-muted); font-weight:600;">Cargando...</p></div>';
                 contentArea.innerHTML = await obtenerDatosSeccion(vistaSolicitada, 'profesional');
@@ -173,11 +195,293 @@ function initProfesionalDashboardEvents(dashboardBaseHtml) {
     });
 
     initCardButtonsEvents();
+    initLogoutEvents();
+}
+
+async function actualizarIndicadoresDeNotificacion() {
+    const session = obtenerSesionActiva();
+    if (!session) return;
+
+    const pacientes = await obtenerPacientes(session.rol, session.email);
+
+    // Indicador para pacientes con alertas
+    const pacientesConAlerta = pacientes.some(p => p.nivel_alerta && p.nivel_alerta.toLowerCase() !== 'bajo' && p.nivel_alerta.toLowerCase() !== 'normal');
+    const badgePacientes = document.querySelector('.sidebar .menu-item[data-view="pacientes"] .notification-badge');
+    if (badgePacientes) {
+        badgePacientes.style.display = pacientesConAlerta ? 'block' : 'none';
+    }
+
+    // Indicador para citas de hoy
+    if (pacientes.length > 0) {
+        const citasPromises = pacientes.map(p => obtenerCitasPaciente(p.id));
+        const citasDeTodos = (await Promise.all(citasPromises)).flat();
+
+        const hoy = new Date();
+        const inicioHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+        const finHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + 1);
+
+        const hayCitasHoy = citasDeTodos.some(cita => {
+            const fechaCita = new Date(cita.fecha_hora);
+            return fechaCita >= inicioHoy && fechaCita < finHoy;
+        });
+
+        const badgeCitas = document.querySelector('.sidebar .menu-item[data-view="citas"] .notification-badge');
+        if (badgeCitas) {
+            badgeCitas.style.display = hayCitasHoy ? 'block' : 'none';
+        }
+    }
+}
+
+
+
+
+
+async function renderProfesionalPacientesSection(container) {
+    const session = obtenerSesionActiva();
+    const emailProfesional = session?.email || '';
+    const pacientes = await obtenerPacientes('profesional', emailProfesional);
+    const pacientesDisponibles = await obtenerPacientes('', '', 'disponibles');
+
+    const pacientesHtml = pacientes.length
+        ? pacientes.map((paciente) => `
+            <div class="card paciente-card">
+                <h4>${paciente.nombre}</h4>
+                <p><strong>Fecha de nacimiento:</strong> ${paciente.fecha_nacimiento}</p>
+                <p><strong>Dirección:</strong> ${paciente.direccion || 'No registrada'}</p>
+                <p><strong>Cuidador:</strong> ${paciente.cuidador_nombre || 'No disponible'}</p>
+                <button class="btn-detalles btn-ver-paciente" data-paciente-id="${paciente.id}" style="margin-top:10px;">Ver / Editar</button>
+            </div>
+        `).join('')
+        : '<div class="card fade-in"><p style="color:var(--text-muted);">No tienes pacientes asignados aún.</p></div>';
+
+    container.innerHTML = `
+        <div class="card fade-in" style="margin-bottom: 18px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+                <div>
+                    <h3>Mis Pacientes</h3>
+                    <p>Ver tus pacientes actuales y asignar nuevos pacientes a tu cuidado.</p>
+                </div>
+                <button id="btn-asignar-paciente" class="btn-detalles" style="padding: 0.8rem 1rem;">Relacionar paciente</button>
+            </div>
+        </div>
+        <div id="profesional-pacientes-list">${pacientesHtml}</div>
+        <div id="asignar-paciente-form-container"></div>
+    `;
+
+    document.getElementById('btn-asignar-paciente')?.addEventListener('click', () => {
+        renderRelacionarPacienteForm(container, pacientesDisponibles, emailProfesional);
+    });
+
+    container.querySelectorAll('.btn-ver-paciente').forEach((button) => {
+        button.addEventListener('click', async () => {
+            const idPaciente = Number(button.dataset.pacienteId);
+            if (!idPaciente) return;
+            openPacienteDetalleModal(idPaciente);
+        });
+    });
+}
+
+function renderRelacionarPacienteForm(container, pacientesDisponibles, emailProfesional) {
+    const pacientesOptions = pacientesDisponibles.length
+        ? pacientesDisponibles.map((paciente) => `
+            <option value="${paciente.id}">${paciente.nombre} — ${paciente.direccion || 'Sin dirección'}</option>
+        `).join('')
+        : '';
+
+    const formHtml = `
+        <div class="card fade-in" style="margin-top: 16px;">
+            <h3>Relacionar paciente como mío</h3>
+            ${pacientesDisponibles.length === 0 ? '<p style="color:var(--text-muted);">No hay pacientes disponibles sin profesional asignado.</p>' : `
+                <form id="relacionar-paciente-form" class="patient-form">
+                    <div class="form-group">
+                        <label>Paciente disponible</label>
+                        <select name="id_paciente" required>
+                            <option value="">Selecciona un paciente</option>
+                            ${pacientesOptions}
+                        </select>
+                    </div>
+                    <div class="form-actions" style="display:flex; gap:12px; justify-content:flex-end; margin-top: 12px;">
+                        <button type="button" id="cancelar-relacionar-paciente" class="btn-outline-login">Cancelar</button>
+                        <button type="submit" class="btn-submit">Relacionar</button>
+                    </div>
+                    <div id="relacionar-form-error" style="margin-top:10px; color:#ef4444; display:none;"></div>
+                    <div id="relacionar-form-success" style="margin-top:10px; color:#2f855a; display:none;"></div>
+                </form>
+            `}
+        </div>
+    `;
+
+    const formContainer = document.getElementById('asignar-paciente-form-container');
+    if (!formContainer) return;
+    formContainer.innerHTML = formHtml;
+
+    document.getElementById('cancelar-relacionar-paciente')?.addEventListener('click', () => {
+        formContainer.innerHTML = '';
+    });
+
+    const form = document.getElementById('relacionar-paciente-form');
+    form?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData(form);
+        const idPaciente = Number(formData.get('id_paciente'));
+        const errorDiv = document.getElementById('relacionar-form-error');
+        const successDiv = document.getElementById('relacionar-form-success');
+
+        if (errorDiv) errorDiv.style.display = 'none';
+        if (successDiv) successDiv.style.display = 'none';
+
+        if (!idPaciente) {
+            if (errorDiv) {
+                errorDiv.textContent = 'Selecciona un paciente válido.';
+                errorDiv.style.display = 'block';
+            }
+            return;
+        }
+
+        const respuesta = await asignarPacienteProfesional(idPaciente, emailProfesional);
+        if (!respuesta.success) {
+            if (errorDiv) {
+                errorDiv.textContent = respuesta.message || 'No se pudo relacionar el paciente con el profesional.';
+                errorDiv.style.display = 'block';
+            }
+            return;
+        }
+
+        if (successDiv) {
+            successDiv.textContent = 'Paciente relacionado con éxito.';
+            successDiv.style.display = 'block';
+        }
+
+        await renderProfesionalPacientesSection(container);
+    });
+}
+
+async function renderPacienteDetalle(container, idPaciente) {
+    const paciente = await obtenerPacienteDetalle(idPaciente);
+    if (!paciente) {
+        container.innerHTML = '<div class="card fade-in"><p style="color:var(--text-muted);">No se encontró el paciente seleccionado.</p></div>';
+        return;
+    }
+
+    const detalleHtml = `
+        <div class="card fade-in">
+            <h3>Detalle del paciente</h3>
+            <form id="editar-paciente-form" class="patient-form">
+                <div class="form-group"><label>Nombre</label><input type="text" name="nombre" value="${paciente.nombre || ''}" required></div>
+                <div class="form-group"><label>Fecha de nacimiento</label><input type="date" name="fecha_nacimiento" value="${paciente.fecha_nacimiento || ''}" required></div>
+                <div class="form-group"><label>Dirección</label><input type="text" name="direccion" value="${paciente.direccion || ''}"></div>
+                <div class="form-group"><label>Historial médico</label><textarea name="historial_medico" rows="3">${paciente.historial_medico || ''}</textarea></div>
+                <div class="form-group"><label>Profesional asignado</label><input type="text" value="${paciente.profesional_nombre || 'No asignado'}" disabled></div>
+                <div class="form-group"><label>Cuidador</label><input type="text" value="${paciente.cuidador_nombre || 'No asignado'}" disabled></div>
+                <div class="form-group"><label>Horario monitoreo</label><input type="text" name="horario_monitoreo" value="${paciente.horario_monitoreo || ''}"></div>
+                <div class="form-group"><label>Observaciones</label><textarea name="observaciones" rows="3">${paciente.observaciones || ''}</textarea></div>
+                <div class="form-group"><label>Nivel alerta</label><input type="text" name="nivel_alerta" value="${paciente.nivel_alerta || ''}"></div>
+                <div class="form-group"><label>Estado general</label><input type="text" name="estado_general" value="${paciente.estado_general || ''}"></div>
+                <div class="form-group"><label>Ubicación</label><input type="text" name="ubicacion" value="${paciente.ubicacion || ''}"></div>
+                <div class="form-actions" style="display:flex; gap:12px; justify-content:flex-end; margin-top: 12px;">
+                    <button type="button" id="volver-paciente-lista" class="btn-outline-login">Volver</button>
+                    <button type="submit" class="btn-submit">Guardar cambios</button>
+                </div>
+                <div id="editar-paciente-error" style="margin-top:10px; color:#ef4444; display:none;"></div>
+                <div id="editar-paciente-success" style="margin-top:10px; color:#2f855a; display:none;"></div>
+            </form>
+        </div>
+    `;
+
+    container.innerHTML = detalleHtml;
+
+    document.getElementById('volver-paciente-lista')?.addEventListener('click', () => {
+        renderProfesionalPacientesSection(container);
+    });
+
+    const form = document.getElementById('editar-paciente-form');
+    form?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData(form);
+        const datosActualizados = {
+            nombre: String(formData.get('nombre') || '').trim(),
+            fecha_nacimiento: String(formData.get('fecha_nacimiento') || '').trim(),
+            direccion: String(formData.get('direccion') || '').trim(),
+            historial_medico: String(formData.get('historial_medico') || '').trim(),
+            horario_monitoreo: String(formData.get('horario_monitoreo') || '').trim(),
+            observaciones: String(formData.get('observaciones') || '').trim(),
+            nivel_alerta: String(formData.get('nivel_alerta') || '').trim(),
+            estado_general: String(formData.get('estado_general') || '').trim(),
+            ubicacion: String(formData.get('ubicacion') || '').trim()
+        };
+
+        const errorDiv = document.getElementById('editar-paciente-error');
+        const successDiv = document.getElementById('editar-paciente-success');
+        if (errorDiv) errorDiv.style.display = 'none';
+        if (successDiv) successDiv.style.display = 'none';
+
+        const respuesta = await actualizarPaciente(idPaciente, datosActualizados);
+        if (!respuesta.success) {
+            if (errorDiv) {
+                errorDiv.textContent = respuesta.message || 'No se pudo actualizar el paciente.';
+                errorDiv.style.display = 'block';
+            }
+            return;
+        }
+
+        if (successDiv) {
+            successDiv.textContent = 'Paciente actualizado con éxito.';
+            successDiv.style.display = 'block';
+        }
+    });
+}
+
+function initLogoutEvents() {
+    const logoutLink = document.querySelector('.sidebar-profesional .logout-item');
+    if (!logoutLink) return;
+
+    logoutLink.addEventListener('click', (event) => {
+        event.preventDefault();
+        cerrarSesion();
+        window.location.hash = '#/login';
+    });
+}
+
+function closeFloatingModal() {
+    document.getElementById('floating-modal-root')?.remove();
+}
+
+function openFloatingModal(contentHtml) {
+    closeFloatingModal();
+
+    const modalHtml = `
+        <div id="floating-modal-root" class="modal-overlay">
+            <div class="modal-dialog">
+                <button type="button" class="modal-close-btn" aria-label="Cerrar">&times;</button>
+                <div id="floating-modal-content" class="modal-content">${contentHtml}</div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const root = document.getElementById('floating-modal-root');
+    root?.querySelector('.modal-close-btn')?.addEventListener('click', closeFloatingModal);
+    root?.addEventListener('click', (event) => {
+        if (event.target === root) closeFloatingModal();
+    });
+}
+
+function openPacienteDetalleModal(idPaciente) {
+    openFloatingModal('<div id="modal-paciente-detail" class="modal-scrollable"></div>');
+    const modalContent = document.getElementById('modal-paciente-detail');
+    if (modalContent) {
+        renderPacienteDetalle(modalContent, idPaciente);
+    }
+}
+
+function limpiarSesionYRedirigir() {
+    cerrarSesion();
+    window.location.hash = '#/login';
 }
 
 function initCardButtonsEvents() {
     const btnHistorial = document.getElementById('btn-historial');
     if (btnHistorial) {
-        btnHistorial.addEventListener('click', () => alert('📁 Abriendo historial clínico...'));
+        btnHistorial.addEventListener('click', () => alert('Abriendo historial clinico...'));
     }
 }

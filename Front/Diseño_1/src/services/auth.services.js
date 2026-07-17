@@ -2,6 +2,25 @@
 
 const API_URL = 'http://127.0.0.1:3001/api';
 
+export function estaAutenticado() {
+    return Boolean(localStorage.getItem('authToken') && sessionStorage.getItem('user_session'));
+}
+
+export function obtenerSesionActiva() {
+    try {
+        const userSession = sessionStorage.getItem('user_session');
+        return userSession ? JSON.parse(userSession) : null;
+    } catch (error) {
+        console.error('Error al parsear la sesión de usuario:', error);
+        return null;
+    }
+}
+
+export function cerrarSesion() {
+    localStorage.removeItem('authToken');
+    sessionStorage.removeItem('user_session');
+}
+
 export async function autenticarUsuario(email, password) {
     try {
         const response = await fetch(`${API_URL}/auth/login`, {

@@ -41,9 +41,7 @@ function normalizarRolParaBaseDatos(rol) {
     case 'administrador':
       return 'Administrador';
     case 'profesional':
-    case 'profecional':
-    case 'profecsional':
-      return 'Profecional';
+      return 'Profesional';
     case 'cuidador':
       return 'Cuidador';
     default:
@@ -58,8 +56,6 @@ function normalizarRolParaFrontend(rol) {
     case 'administrador':
       return 'administrador';
     case 'profesional':
-    case 'profecional':
-    case 'profecsional':
       return 'profesional';
     case 'cuidador':
       return 'cuidador';
@@ -86,8 +82,23 @@ async function asegurarUsuariosDemoEnBaseDeDatos(pool) {
   `);
 
   await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS usuarios_sistema_correo_electronico_key
+    ON public.usuarios_sistema (correo_electronico)
+  `);
+
+  await pool.query(`
     ALTER TABLE public.usuarios_sistema
     ADD COLUMN IF NOT EXISTS nombre TEXT
+  `);
+
+  await pool.query(`
+    ALTER TABLE public.usuarios_sistema
+    DROP CONSTRAINT IF EXISTS usuarios_sistema_rol_check
+  `);
+
+  await pool.query(`
+    ALTER TABLE public.usuarios_sistema
+    ADD CONSTRAINT usuarios_sistema_rol_check CHECK ((rol)::text = ANY ((ARRAY['Administrador'::character varying, 'Profesional'::character varying, 'Cuidador'::character varying])::text[]))
   `);
 
   await pool.query(`
@@ -96,8 +107,19 @@ async function asegurarUsuariosDemoEnBaseDeDatos(pool) {
       nombre TEXT NOT NULL,
       especialidad TEXT,
       numero_licencia VARCHAR(50) NOT NULL UNIQUE,
-      turno VARCHAR(30)
+      turno VARCHAR(30),
+      email TEXT UNIQUE
     )
+  `);
+
+  await pool.query(`
+    ALTER TABLE public.profecionales
+    ADD COLUMN IF NOT EXISTS email TEXT UNIQUE
+  `);
+
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS profecionales_numero_licencia_key
+    ON public.profecionales (numero_licencia)
   `);
 
   await pool.query(`
@@ -108,6 +130,11 @@ async function asegurarUsuariosDemoEnBaseDeDatos(pool) {
       email TEXT UNIQUE,
       relacion_paciente TEXT NOT NULL
     )
+  `);
+
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS encargados_o_cuidadores_email_key
+    ON public.encargados_o_cuidadores (email)
   `);
 
   const usuariosDemo = [
@@ -139,8 +166,8 @@ async function asegurarUsuariosDemoEnBaseDeDatos(pool) {
   }
 
   await pool.query(
-    'INSERT INTO public.profecionales (nombre, especialidad, numero_licencia, turno) VALUES ($1, $2, $3, $4) ON CONFLICT (numero_licencia) DO NOTHING',
-    ['Jack (Especialista)', 'General', 'demo-profesional-001', 'Mañana']
+    'INSERT INTO public.profecionales (nombre, especialidad, numero_licencia, turno, email) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (numero_licencia) DO NOTHING',
+    ['Jack (Especialista)', 'General', 'demo-profesional-001', 'Mañana', 'profesional@zoecare.com']
   );
 
   await pool.query(
@@ -210,8 +237,23 @@ async function insertarUsuarioEnBaseDeDatos(usuario) {
   `);
 
   await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS usuarios_sistema_correo_electronico_key
+    ON public.usuarios_sistema (correo_electronico)
+  `);
+
+  await pool.query(`
     ALTER TABLE public.usuarios_sistema
     ADD COLUMN IF NOT EXISTS nombre TEXT
+  `);
+
+  await pool.query(`
+    ALTER TABLE public.usuarios_sistema
+    DROP CONSTRAINT IF EXISTS usuarios_sistema_rol_check
+  `);
+
+  await pool.query(`
+    ALTER TABLE public.usuarios_sistema
+    ADD CONSTRAINT usuarios_sistema_rol_check CHECK ((rol)::text = ANY ((ARRAY['Administrador'::character varying, 'Profesional'::character varying, 'Cuidador'::character varying])::text[]))
   `);
 
   const resultado = await pool.query(
@@ -231,9 +273,14 @@ async function insertarUsuarioEnBaseDeDatos(usuario) {
       )
     `);
 
+    await pool.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS profecionales_numero_licencia_key
+      ON public.profecionales (numero_licencia)
+    `);
+
     await pool.query(
-      'INSERT INTO public.profecionales (nombre, especialidad, numero_licencia, turno) VALUES ($1, $2, $3, $4) ON CONFLICT (numero_licencia) DO NOTHING',
-      [String(usuario.nombre || '').trim(), 'General', `${Date.now()}`, 'Mañana']
+      'INSERT INTO public.profecionales (nombre, especialidad, numero_licencia, turno, email) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (numero_licencia) DO NOTHING',
+      [String(usuario.nombre || '').trim(), 'General', `${Date.now()}`, 'Mañana', String(usuario.email).trim()]
     );
   } else if (rol === 'cuidador') {
     await pool.query(`
@@ -244,6 +291,11 @@ async function insertarUsuarioEnBaseDeDatos(usuario) {
         email TEXT UNIQUE,
         relacion_paciente TEXT NOT NULL
       )
+    `);
+
+    await pool.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS encargados_o_cuidadores_email_key
+      ON public.encargados_o_cuidadores (email)
     `);
 
     await pool.query(
