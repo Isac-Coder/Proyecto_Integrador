@@ -1,3 +1,7 @@
+/**
+ * Devuelve las secciones visibles para cada tipo de usuario.
+ * El contenido actual es información de demostración mantenida en memoria.
+ */
 function obtenerSeccionesPorRol(rol) {
   if (rol === 'cuidador') {
     return {
@@ -52,7 +56,9 @@ function obtenerSeccionesPorRol(rol) {
   };
 }
 
+/** Devuelve todas las secciones disponibles para el rol indicado. */
 exports.getDashboard = (req, res) => {
+  // Normaliza el parámetro para evitar diferencias por mayúsculas o valores vacíos.
   const rol = String(req.params.rol || 'profesional').toLowerCase();
   const secciones = obtenerSeccionesPorRol(rol);
 
@@ -63,7 +69,9 @@ exports.getDashboard = (req, res) => {
   return res.json({ success: true, rol, secciones });
 };
 
+/** Devuelve una única sección del panel solicitada por el cliente. */
 exports.getSection = (req, res) => {
+  // Normaliza ambos parámetros antes de buscar el contenido.
   const rol = String(req.params.rol || 'profesional').toLowerCase();
   const seccion = String(req.params.seccion || '').toLowerCase();
   const secciones = obtenerSeccionesPorRol(rol);

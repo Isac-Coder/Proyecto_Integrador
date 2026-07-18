@@ -2,6 +2,7 @@ const { spawn } = require('child_process');
 const http = require('http');
 const path = require('path');
 
+/** Ejecuta el script auxiliar que abre las direcciones locales en el navegador. */
 function openBrowser() {
   const scriptPath = path.join(__dirname, 'open-browser.js');
   const child = spawn(process.execPath, [scriptPath], {
@@ -15,10 +16,12 @@ function openBrowser() {
   });
 }
 
+// Ruta base del repositorio y procesos iniciados por este lanzador.
 const root = path.resolve(__dirname, '..');
 const children = [];
 let shuttingDown = false;
 
+// Definición de los servicios que conforman la aplicación local.
 const processes = [
   {
     name: 'backend',
@@ -36,6 +39,7 @@ const processes = [
   }
 ];
 
+/** Comprueba si un servicio ya responde para no iniciar una segunda instancia. */
 function isServiceAvailable(url) {
   return new Promise((resolve) => {
     const req = http.get(url, (res) => {
@@ -51,6 +55,7 @@ function isServiceAvailable(url) {
   });
 }
 
+/** Detiene de forma coordinada los procesos secundarios al cerrar el lanzador. */
 function stopAll() {
   shuttingDown = true;
   for (const child of children) {
@@ -61,6 +66,7 @@ function stopAll() {
   setTimeout(() => process.exit(0), 200);
 }
 
+/** Inicia un servicio con su directorio y comando de ejecución correspondientes. */
 function spawnService(proc) {
   const options = {
     cwd: proc.cwd,
@@ -72,6 +78,7 @@ function spawnService(proc) {
   let command = proc.command;
   let args = proc.args;
 
+  // En Windows, los scripts .cmd se ejecutan mediante cmd.exe.
   if (process.platform === 'win32' && command.toLowerCase().endsWith('.cmd')) {
     args = ['/c', command, ...proc.args];
     command = 'cmd.exe';
@@ -81,6 +88,7 @@ function spawnService(proc) {
 
   children.push(child);
 
+  // Si un servicio se detiene inesperadamente, termina también el lanzador.
   child.on('exit', (code) => {
     if (!shuttingDown) {
       console.error(`${proc.name} terminó con código ${code}`);
@@ -89,8 +97,10 @@ function spawnService(proc) {
   });
 }
 
+/** Coordina el arranque, apertura del navegador y manejo de señales del sistema. */
 async function main() {
   for (const proc of processes) {
+    // Reutiliza una instancia existente cuando el puerto ya está atendiendo solicitudes.
     const available = await isServiceAvailable(proc.url);
 
     if (available) {
@@ -101,17 +111,20 @@ async function main() {
     spawnService(proc);
   }
 
+  // Espera brevemente para que los servidores estén disponibles antes de abrir URLs.
   setTimeout(() => {
     if (!shuttingDown) {
       openBrowser();
     }
   }, 1500);
 
+  // Mantiene el proceso principal activo y permite detenerlo con Ctrl + C.
   process.stdin.resume();
   process.on('SIGINT', stopAll);
   process.on('SIGTERM', stopAll);
 }
 
+// Informa cualquier error no controlado durante la coordinación de servicios.
 main().catch((error) => {
   console.error(error);
   process.exit(1);

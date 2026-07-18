@@ -1,6 +1,8 @@
 const { Client } = require('pg');
+// Carga las variables necesarias para esta comprobación manual de PostgreSQL.
 require('dotenv').config({ path: '../.env' });
 
+// Script temporal autocontenido para validar conexión, esquema e inserción.
 (async () => {
   const client = new Client({
     host: process.env.DB_HOST,
@@ -11,6 +13,7 @@ require('dotenv').config({ path: '../.env' });
   });
 
   try {
+    // Abre la conexión y garantiza una tabla mínima para la prueba.
     await client.connect();
     await client.query(`
       CREATE TABLE IF NOT EXISTS public.usuarios_sistema (
@@ -23,6 +26,7 @@ require('dotenv').config({ path: '../.env' });
       )
     `);
 
+    // Inserta una fila de prueba y muestra los campos devueltos por PostgreSQL.
     const res = await client.query(
       'INSERT INTO public.usuarios_sistema (correo_electronico, contrasena_hash, rol, ultimo_acceso) VALUES ($1, $2, $3, CURRENT_DATE) RETURNING id_usuario, correo_electronico, rol',
       ['anual@zoecare.com', 'hash', 'Cuidador']
@@ -32,6 +36,7 @@ require('dotenv').config({ path: '../.env' });
     console.error(err.message);
     process.exitCode = 1;
   } finally {
+    // Libera la conexión incluso si la consulta falla.
     await client.end();
   }
 })();
