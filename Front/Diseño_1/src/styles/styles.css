@@ -316,11 +316,11 @@ button {
 .dashboard-layout {
   display: flex;
   min-height: 100vh;
-  background-color: #E3DDD5;
+  background-color: #ffffff;
   position: relative; }
   .dashboard-layout .sidebar {
     width: 280px;
-    background-color: #FFFFFF;
+    background-color: #581794;
     padding: 44px 24px;
     border-right: 1px solid rgba(70, 84, 83, 0.05);
     display: flex;
@@ -359,7 +359,7 @@ button {
       align-items: center;
       gap: 14px;
       padding: 14px 18px;
-      color: rgba(59, 68, 67, 0.6);
+      color: rgba(255, 255, 255, 0.55);
       text-decoration: none;
       font-weight: 600;
       font-size: 0.95rem;
@@ -369,7 +369,7 @@ button {
         font-size: 1.3rem;
         transition: all 0.25s ease-in-out; }
       .dashboard-layout .sidebar .menu-item:hover {
-        color: #3B4443;
+        color: #FFFFFF;
         background-color: rgba(255, 255, 255, 0.6);
         transform: translateX(4px); }
     .dashboard-layout .sidebar .logout-item {
@@ -386,12 +386,14 @@ button {
       box-shadow: 0 8px 20px rgba(70, 84, 83, 0.15); }
       .dashboard-layout .sidebar.sidebar-profesional .menu-item:hover i, .dashboard-layout .sidebar.sidebar-profesional .menu-item.active i {
         color: #FFFFFF !important; }
+    .dashboard-layout .sidebar.sidebar-cuidador {
+      background-color: #2E1A47; }
     .dashboard-layout .sidebar.sidebar-cuidador .sidebar-logo {
-      color: #667b79; }
+      color: #c3bfc8; }
     .dashboard-layout .sidebar.sidebar-cuidador .menu-item:hover, .dashboard-layout .sidebar.sidebar-cuidador .menu-item.active {
-      background-color: #667b79 !important;
+      background-color: #4A2F6B !important;
       color: #FFFFFF !important;
-      box-shadow: 0 8px 20px rgba(102, 123, 121, 0.15); }
+      box-shadow: 0 8px 20px rgba(74, 47, 107, 0.15); }
       .dashboard-layout .sidebar.sidebar-cuidador .menu-item:hover i, .dashboard-layout .sidebar.sidebar-cuidador .menu-item.active i {
         color: #FFFFFF !important; }
   .dashboard-layout .dashboard-main {
@@ -419,7 +421,7 @@ button {
         margin: 0 0 4px 0;
         font-size: 1.8rem;
         font-weight: 700;
-        color: #3B4443;
+        color: #025b0a;
         letter-spacing: -0.5px; }
       .dashboard-layout .dashboard-main .dashboard-header .welcome-text .current-date {
         color: rgba(59, 68, 67, 0.6);
@@ -521,16 +523,16 @@ button {
   .dashboard-layout.layout-profesional .btn-detalles:hover {
     background-color: #E3DDD5; }
 .dashboard-layout.layout-cuidador .card-main-cuidador {
-  background: linear-gradient(135deg, #667b79 0%, #465453 100%);
+  background: linear-gradient(135deg, #4A2F6B 0%, #2E1A47 100%);
   color: #FFFFFF;
   border: none; }
   .dashboard-layout.layout-cuidador .card-main-cuidador h3 {
     color: rgba(255, 255, 255, 0.6); }
 .dashboard-layout.layout-cuidador .btn-detalles {
   background-color: #FFFFFF;
-  color: #667b79; }
+  color: #4A2F6B; }
   .dashboard-layout.layout-cuidador .btn-detalles:hover {
-    background-color: #E3DDD5; }
+    background-color: #ECE6F5; }
 
 .doctor-info {
   display: flex;
@@ -601,7 +603,7 @@ button {
     padding: 28px;
     border-radius: 20px;
     box-shadow: 0 12px 40px rgba(59, 68, 67, 0.05);
-    border-left: 6px solid transparent;
+    border-left: 10px solid transparent;
     transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.1); }
     .vitals-grid .vital-card:hover {
       transform: translateY(-4px);
@@ -611,9 +613,11 @@ button {
     .vitals-grid .vital-card.vital-heart {
       border-left-color: #c46d60; }
     .vitals-grid .vital-card.vital-oxygen {
-      border-left-color: #547565; }
+      border-left-color: #C97B5C;
+      box-shadow: 0 12px 30px rgba(201, 123, 92, 0.12); }
     .vitals-grid .vital-card.vital-pressure {
-      border-left-color: #b5925a; }
+      border-left-color: #6B8F71;
+      box-shadow: 0 12px 30px rgba(107, 143, 113, 0.12); }
     .vitals-grid .vital-card .vital-value {
       font-size: 2.4rem;
       font-weight: 800;
@@ -632,7 +636,7 @@ button {
   overflow: hidden;
   margin: 16px 0; }
   .progress-bar-container .progress-bar {
-    background-color: #D2967F;
+    background-color: #C97B5C;
     height: 100%;
     border-radius: 20px;
     transition: width 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.1); }
@@ -673,9 +677,9 @@ button {
       border-bottom: none; }
     .actions-list li:hover {
       padding-left: 10px;
-      color: #D2967F; }
+      color: #C97B5C; }
       .actions-list li:hover .arrow {
-        color: #D2967F;
+        color: #C97B5C;
         transform: translateX(4px); }
     .actions-list li .arrow {
       color: rgba(59, 68, 67, 0.6);
