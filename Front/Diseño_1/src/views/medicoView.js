@@ -540,7 +540,7 @@ function configurarEventosDelDashboardMedico() {
     // =========================================================================================
     const elementoModalOverlay = document.getElementById('ventana-modal-emergente-global');
     const elementoContenidoModal = document.getElementById('contenedor-contenido-interno-modal');
-    const botonCerrarModalCruz = document.getElementById('geton-cerrar-ventana-modal');
+    const botonCerrarModalCruz = document.getElementById('boton-cerrar-ventana-modal');
 
     const hacerVisibleVentanaModal = (htmlFormularioInterno) => {
         if (!elementoModalOverlay || !elementoContenidoModal) return;
