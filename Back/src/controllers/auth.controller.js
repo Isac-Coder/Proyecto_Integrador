@@ -107,8 +107,14 @@ async function asegurarUsuariosDemoEnBaseDeDatos(pool) {
       nombre TEXT NOT NULL,
       especialidad TEXT,
       numero_licencia VARCHAR(50) NOT NULL UNIQUE,
-      turno VARCHAR(30)
+      turno VARCHAR(30),
+      email TEXT UNIQUE
     )
+  `);
+
+  await pool.query(`
+    ALTER TABLE public.profecionales
+    ADD COLUMN IF NOT EXISTS email TEXT UNIQUE
   `);
 
   await pool.query(`
@@ -160,8 +166,8 @@ async function asegurarUsuariosDemoEnBaseDeDatos(pool) {
   }
 
   await pool.query(
-    'INSERT INTO public.profecionales (nombre, especialidad, numero_licencia, turno) VALUES ($1, $2, $3, $4) ON CONFLICT (numero_licencia) DO NOTHING',
-    ['Jack (Especialista)', 'General', 'demo-profesional-001', 'Mañana']
+    'INSERT INTO public.profecionales (nombre, especialidad, numero_licencia, turno, email) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (numero_licencia) DO NOTHING',
+    ['Jack (Especialista)', 'General', 'demo-profesional-001', 'Mañana', 'profesional@zoecare.com']
   );
 
   await pool.query(
@@ -273,8 +279,8 @@ async function insertarUsuarioEnBaseDeDatos(usuario) {
     `);
 
     await pool.query(
-      'INSERT INTO public.profecionales (nombre, especialidad, numero_licencia, turno) VALUES ($1, $2, $3, $4) ON CONFLICT (numero_licencia) DO NOTHING',
-      [String(usuario.nombre || '').trim(), 'General', `${Date.now()}`, 'Mañana']
+      'INSERT INTO public.profecionales (nombre, especialidad, numero_licencia, turno, email) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (numero_licencia) DO NOTHING',
+      [String(usuario.nombre || '').trim(), 'General', `${Date.now()}`, 'Mañana', String(usuario.email).trim()]
     );
   } else if (rol === 'cuidador') {
     await pool.query(`

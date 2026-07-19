@@ -1092,6 +1092,9 @@ body {
   flex-direction: column;
   gap: 18px;
 }
+#input-vital-ritmo, #input-vital-oxigeno, #input-vital-presion, #input-vital-glucosa {
+width: 180px;
+}
 .zoe-modal-overlay .modal-field {
   display: flex;
   flex-direction: column;
