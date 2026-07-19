@@ -1163,7 +1163,7 @@ width: 180px;
 }
 .zoe-modal-overlay .modal-actions .btn-guardar-modal {
   background-color: #D2967F;
-  color: #FFFFFF;
+  color: rgba(59, 68, 67, 0.6);
   border: none;
   padding: 12px 24px;
   border-radius: 10px;
