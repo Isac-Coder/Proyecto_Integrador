@@ -2,21 +2,18 @@
 import { registrarUsuarioEnBackend } from '../services/registro.service.js';
 
 export function registerView() {
-    if (!document.getElementById('login-style')) {
-        const styleLink = document.createElement('link');
-        styleLink.id = 'login-style';
-        styleLink.rel = 'stylesheet';
-        styleLink.href = './styles/login.css';
-        document.head.appendChild(styleLink);
-    }
-
     // Programamos la ejecución de los eventos de registro
     setTimeout(() => {
         initRegisterEvents();
     }, 0);
 
     return `
-        <div class="login-container">
+        <div class="login-container video-page">
+            <div class="video-background">
+                <video autoplay muted loop playsinline class="background-video-element">
+                    <source src="assets/backgroun_Video%20(1).mp4" type="video/mp4">
+                </video>
+            </div>
             <div class="login-card" style="max-width: 500px;">
                 <div class="login-header">
                     <div class="login-logo">Zoe Care</div>

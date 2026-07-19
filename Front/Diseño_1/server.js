@@ -15,7 +15,8 @@ const mimeTypes = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
-  '.ico': 'image/x-icon'
+  '.ico': 'image/x-icon',
+  '.mp4': 'video/mp4'
 };
 
 const root = path.join(__dirname, 'src');
@@ -23,6 +24,15 @@ const root = path.join(__dirname, 'src');
 const server = http.createServer((req, res) => {
   const requestPath = req.url.split('?')[0];
   let urlPath = requestPath === '/' ? '/index.html' : requestPath;
+
+  try {
+    urlPath = decodeURIComponent(urlPath);
+  } catch (error) {
+    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Solicitud inválida');
+    return;
+  }
+
   const safePath = path.normalize(urlPath).replace(/^\/+/, '');
   const filePath = path.join(root, safePath || 'index.html');
 

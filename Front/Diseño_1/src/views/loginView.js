@@ -3,21 +3,18 @@ import { autenticarUsuario } from '../services/auth.services.js';
 import { normalizarRolParaFrontend } from '../utils/role.mjs';
 
 export function loginView() {
-    if (!document.getElementById('login-style')) {
-        const styleLink = document.createElement('link');
-        styleLink.id = 'login-style';
-        styleLink.rel = 'stylesheet';
-        styleLink.href = './styles/login.css';
-        document.head.appendChild(styleLink);
-    }
-
     // Programamos los eventos inmediatamente después del renderizado en el DOM
     setTimeout(() => {
         initLoginEvents();
     }, 0);
 
     return `
-        <div class="login-container">
+        <div class="login-container video-page">
+            <div class="video-background">
+                <video autoplay muted loop playsinline class="background-video-element">
+                    <source src="assets/backgroun_Video%20(1).mp4" type="video/mp4">
+                </video>
+            </div>
             <div class="login-card">
                 <div class="login-header">
                     <div class="login-logo">Zoe Care</div>
