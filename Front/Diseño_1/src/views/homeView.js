@@ -187,7 +187,7 @@ export function HomeView() {
                             <div class="team-avatar">
                                 <img src="views/zoe-landing/images/maru-.jpg" alt="Maryuris Movilla, Frontend Developer">
                             </div>
-                            <h3>Maryuris Movilla</h3>s
+                            <h3>Maryuris Movilla</h3>
                             <p class="role">Frontend Developer</p>
                             <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="LinkedIn de Isaac Valdes">
                                 <i class="fab fa-linkedin"></i>
