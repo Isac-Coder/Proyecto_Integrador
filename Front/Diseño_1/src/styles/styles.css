@@ -1268,6 +1268,111 @@ section[id] {
   background-color: #E3DDD5;
 }
 
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(70, 84, 83, 0.16);
+  background-color: #FFFFFF;
+  color: #465453;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(59, 68, 67, 0.05);
+  transition: all 0.25s ease-in-out;
+}
+
+.btn-secondary:hover {
+  background-color: #E3DDD5;
+  transform: translateY(-1px);
+}
+
+.btn-ver-paciente {
+  min-width: 160px;
+  padding: 12px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(70, 84, 83, 0.12);
+  background-color: #FFFFFF;
+  color: #465453;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(59, 68, 67, 0.06);
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+}
+
+.btn-ver-paciente:hover {
+  background-color: rgba(70, 84, 83, 0.06);
+  transform: translateY(-1px);
+}
+
+#btn-crear-paciente {
+  background-color: #D2967F;
+  color: #FFFFFF;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(210, 150, 127, 0.18);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: all 0.25s ease-in-out;
+}
+
+#btn-crear-paciente:hover {
+  background-color: #be8065;
+  transform: translateY(-1px);
+}
+
+#btn-asignar-paciente {
+  background-color: #465453;
+  color: #FFFFFF;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 16px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.95rem;
+  box-shadow: 0 12px 28px rgba(70, 84, 83, 0.18);
+  transition: all 0.25s ease-in-out;
+}
+
+#btn-asignar-paciente:hover {
+  background-color: #3d4846;
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 28px;
+  border-radius: 16px;
+  border: none;
+  background-color: #465453;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(70, 84, 83, 0.18);
+  transition: all 0.25s ease-in-out;
+  text-decoration: none;
+}
+
+.btn-primary:hover {
+  background-color: #3d4846;
+  transform: translateY(-1px);
+}
+
+#btn-crear-plantilla,
+#btn-crear-cita,
+#btn-registrar-medicamento {
+  min-width: 170px;
+}
+
 .doctor-info {
   display: flex;
   align-items: center;
@@ -1368,6 +1473,58 @@ section[id] {
   min-height: 110px;
   resize: vertical;
 }
+.form-group-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.form-group-inline label {
+  font-weight: 700;
+  color: #333;
+}
+
+#bitacora-paciente-select,
+.form-group-inline select {
+  min-width: 240px;
+  padding: 12px 16px;
+  border: 1px solid #d3d7dc;
+  border-radius: 14px;
+  background-color: #fafbfc;
+  color: #1f2937;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#bitacora-paciente-select:focus,
+.form-group-inline select:focus {
+  outline: none;
+  border-color: #d2967f;
+  box-shadow: 0 0 0 4px rgba(210, 150, 127, 0.12);
+}
+
+.btn-danger {
+  background-color: #e15f5f;
+  color: #ffffff;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 14px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: all 0.25s ease-in-out;
+}
+
+.btn-danger:hover,
+.btn-danger:focus {
+  background-color: #c44d4d;
+}
+
+.btn-remove-campo {
+  box-shadow: 0 10px 20px rgba(225, 95, 95, 0.12);
+}
+
 .patient-form .form-actions {
   display: flex;
   gap: 12px;
