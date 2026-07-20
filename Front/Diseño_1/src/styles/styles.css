@@ -1311,6 +1311,7 @@ section[id] {
 .card-actions {
   display: flex;
   align-items: center;
+  justify-content: space-evenly;
 }
 .card-actions button {
   padding: 12px 24px;
