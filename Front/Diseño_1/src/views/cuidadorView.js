@@ -1329,7 +1329,7 @@ async function renderBitacoraDetail(container, idPaciente) {
                     <h4>Plantilla de bitácora</h4>
                     <p>Define los datos generales que deseas capturar cada vez que registras la bitácora.</p>
                 </div>
-                <button id="btn-crear-plantilla" class="btn btn-primary">Nueva plantilla</button>
+                <button id="btn-crear-plantilla" class="btn btn-primary">Agregar Bitacora</button>
             </div>
             <ul class="plantilla-list" style="margin-top:14px; padding-left:18px;">${plantillasHtml}</ul>
         </div>
