@@ -133,6 +133,14 @@ Se está realizando una segunda ola de refinamiento visual y de experiencia para
 - Se unificó la carga de estilos para que las vistas del login, cuidador y profesional compartan la misma hoja visual.
 - Se añadió soporte en el servidor para archivos de video en formato MP4 y WebM.
 
+### 8. Video de fondo en login y registro
+- Se incorporó un video de fondo en la vista de inicio de sesión y en la vista de registro para dar una apariencia más moderna, premium y visualmente más atractiva.
+- Se añadió una capa de superposición con un degradado suave para que el video no oscurezca excesivamente el contenido del formulario.
+- Se ajustó la distribución de la interfaz para que la tarjeta del formulario se mantenga visible y legible por encima del video.
+- Se aplicó un estilo translúcido y con efecto de vidrio a la tarjeta del formulario para reforzar la sensación de profundidad y elegancia.
+- Se incorporó un efecto de zoom sutil y un ligero ajuste de contraste y saturación para que el fondo se vea más dinámico sin perder calidad visual.
+- Se dejó preparado el diseño para que el video se cargue desde la carpeta de assets del frontend, manteniendo el sistema consistente en ambas pantallas de acceso.
+
 ---
 
 ## Qué se puede mejorar después
