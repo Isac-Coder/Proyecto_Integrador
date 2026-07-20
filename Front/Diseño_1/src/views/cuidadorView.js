@@ -123,16 +123,25 @@ export function cuidadorView() {
                         <span></span>
                         <span></span>
                     </button>
-                    <div class="welcome-text">
-                        <h2>Hola, Juana Pérez</h2>
-                        <span class="current-date">Viernes, 10 julio 2026</span>
+
+
+
+                                        <div class="welcome-text">
+                        <h2 id="header-cuidador-nombre">Hola, cargando...</h2>
+                        <span class="current-date" id="header-cuidador-fecha"></span>
                     </div>
                     <div class="header-actions-group">
-                        <div class="header-search">
+                        <div class="hleader-search">
                             <input type="text" placeholder="Buscar pacientes, bitácora...">
                         </div>
-                        <div class="avatar">JP</div>
+                        <div class="avatar" id="header-cuidador-avatar">CU</div>
                     </div>
+
+
+
+
+
+
                 </header>
 
                 <div id="cuidador-content-area">
