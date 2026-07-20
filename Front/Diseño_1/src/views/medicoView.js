@@ -1,5 +1,5 @@
 // src/views/medicoView.js
-import { obtenerDatosSeccion, obtenerPacientes, asignarPacienteProfesional, obtenerPacienteDetalle, actualizarPaciente, obtenerCitasPaciente } from '../services/data.service.js';
+import { obtenerDatosSeccion, obtenerPacientes, asignarPacienteProfesional, obtenerPacienteDetalle, actualizarPaciente, obtenerCitasPaciente, obtenerBitacoraRegistros } from '../services/data.service.js';
 import { cerrarSesion, obtenerSesionActiva } from '../services/auth.services.js';
 
 export function profesionalView() {
@@ -11,7 +11,7 @@ export function profesionalView() {
         const styleLink = document.createElement('link');
         styleLink.id = 'zoe-global-style';
         styleLink.rel = 'stylesheet';
-        styleLink.href = '/Proyecto_Integrador/Front/Diseño_1/src/styles/styles.css';
+        styleLink.href = '/styles/styles.css';
         document.head.appendChild(styleLink);
     }
 
@@ -21,15 +21,45 @@ export function profesionalView() {
     const estructuraDashboardBase = `
         <div class="dashboard-grid fade-in">
             <section class="main-content-column">
-                
-                <!-- Próxima Cita -->
+                <div class="card professional-hero-card">
+                    <div>
+                        <span class="professional-pill">Panel clínico premium</span>
+                        <h3 id="professional-hero-title">Tu espacio de observación y decisión está más claro y elegante</h3>
+                        <p id="professional-hero-description">Coordina pacientes, revisa indicadores y prioriza atenciones con una vista más cercana a un entorno hospitalario moderno.</p>
+                    </div>
+                    <div class="professional-hero-metrics" id="professional-hero-metrics">
+                        <div class="professional-metric-chip">Cargando pacientes...</div>
+                    </div>
+                </div>
+
+                <div id="professional-patient-summary" class="card professional-summary-card"></div>
+
+                <div class="professional-stats-grid">
+                    <div class="professional-stat-card">
+                        <span class="professional-stat-label">Pacientes en seguimiento</span>
+                        <strong>12</strong>
+                    </div>
+                    <div class="professional-stat-card">
+                        <span class="professional-stat-label">Reportes pendientes</span>
+                        <strong>5</strong>
+                    </div>
+                    <div class="professional-stat-card">
+                        <span class="professional-stat-label">Indicaciones emitidas</span>
+                        <strong>18</strong>
+                    </div>
+                    <div class="professional-stat-card">
+                        <span class="professional-stat-label">Estado clínico general</span>
+                        <strong>Estable</strong>
+                    </div>
+                </div>
+
                 <div class="card next-appointment-card">
                     <h3>PRÓXIMA CONSULTA / ASISTENCIA</h3>
                     <div class="doctor-info">
                         <div class="doctor-avatar"></div>
                         <div class="doctor-meta">
-                            <h4>Paciente: Miren Yagoo</h4>
-                            <p>Control de Monitoreo General</p>
+                            <h4 id="professional-next-patient">Paciente: Cargando...</h4>
+                            <p id="professional-next-description">Esperando información del paciente asignado.</p>
                         </div>
                     </div>
                     <div class="appointment-date">
@@ -43,7 +73,6 @@ export function profesionalView() {
                     </div>
                 </div>
 
-                <!-- Indicadores de Salud -->
                 <div class="vitals-grid">
                     <div class="vital-card vital-glucose">
                         <span class="vital-value">102</span>
@@ -63,7 +92,6 @@ export function profesionalView() {
                     </div>
                 </div>
 
-                <!-- Bloque del Gráfico -->
                 <div class="card chart-card">
                     <div class="chart-header">
                         <h3>Evolución Clínica del Paciente</h3>
@@ -79,7 +107,7 @@ export function profesionalView() {
             </section>
 
             <aside class="right-content-column">
-                <div class="card tracking-card">
+                <div class="card tracking-card professional-side-panel">
                     <h3>Seguimiento del Plan de Cuidado</h3>
                     <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">Progreso General</p>
                     <div class="progress-bar-container">
@@ -87,6 +115,10 @@ export function profesionalView() {
                     </div>
                     <div class="progress-labels">
                         <span>60% completado</span>
+                    </div>
+                    <div class="professional-signal-list">
+                        <span class="professional-signal">✓ Ruta de medicación ajustada</span>
+                        <span class="professional-signal">✓ Observaciones del cuidador revisadas</span>
                     </div>
                 </div>
 
@@ -109,6 +141,7 @@ export function profesionalView() {
     setTimeout(() => {
         initProfesionalDashboardEvents(estructuraDashboardBase);
         actualizarIndicadoresDeNotificacion();
+        cargarContenidoDashboardProfesional();
     }, 0);
 
     return `
@@ -170,6 +203,60 @@ function obtenerFechaFormateada() {
     return fecha.charAt(0).toUpperCase() + fecha.slice(1);
 }
 
+async function cargarContenidoDashboardProfesional() {
+    const session = obtenerSesionActiva();
+    const emailProfesional = session?.email || '';
+    const pacientes = await obtenerPacientes('profesional', emailProfesional);
+
+    const heroTitle = document.getElementById('professional-hero-title');
+    const heroDescription = document.getElementById('professional-hero-description');
+    const heroMetrics = document.getElementById('professional-hero-metrics');
+    const summaryContainer = document.getElementById('professional-patient-summary');
+    const nextPatient = document.getElementById('professional-next-patient');
+    const nextDescription = document.getElementById('professional-next-description');
+
+    if (pacientes.length) {
+        const pacientePrincipal = pacientes[0];
+        if (heroTitle) heroTitle.textContent = `Seguimiento activo para ${pacientePrincipal.nombre || 'tu paciente'}`;
+        if (heroDescription) heroDescription.textContent = 'Los pacientes relacionados con tu cuenta se muestran automáticamente desde la base de datos del backend.';
+        if (heroMetrics) {
+            heroMetrics.innerHTML = `
+                <div class="professional-metric-chip">${pacientes.length} paciente${pacientes.length > 1 ? 's' : ''} asignado${pacientes.length > 1 ? 's' : ''}</div>
+                <div class="professional-metric-chip">${pacientePrincipal.direccion ? 'Dirección registrada' : 'Sin dirección registrada'}</div>
+                <div class="professional-metric-chip">${pacientePrincipal.cuidador_nombre ? `Cuidador: ${pacientePrincipal.cuidador_nombre}` : 'Sin cuidador asignado'}</div>
+            `;
+        }
+        if (nextPatient) nextPatient.textContent = `Paciente: ${pacientePrincipal.nombre || 'Sin nombre'}`;
+        if (nextDescription) nextDescription.textContent = pacientePrincipal.direccion ? `Seguimiento y coordinación para ${pacientePrincipal.direccion}` : 'Sin información adicional registrada.';
+        if (summaryContainer) {
+            summaryContainer.innerHTML = `
+                <h3>Pacientes asignados</h3>
+                <ul class="professional-patient-list">
+                    ${pacientes.map((paciente) => `<li><strong>${paciente.nombre || 'Paciente sin nombre'}</strong>${paciente.cuidador_nombre ? ` · Cuidador: ${paciente.cuidador_nombre}` : ''}</li>`).join('')}
+                </ul>
+            `;
+        }
+    } else {
+        if (heroTitle) heroTitle.textContent = 'Aún no tienes pacientes asignados';
+        if (heroDescription) heroDescription.textContent = 'Cuando un paciente sea creado y vinculado a tu cuenta, aparecerá aquí automáticamente.';
+        if (heroMetrics) {
+            heroMetrics.innerHTML = `
+                <div class="professional-metric-chip">Sin pacientes aún</div>
+                <div class="professional-metric-chip">Esperando vinculación</div>
+                <div class="professional-metric-chip">Listo para recibir datos</div>
+            `;
+        }
+        if (nextPatient) nextPatient.textContent = 'Paciente: Sin pacientes asignados';
+        if (nextDescription) nextDescription.textContent = 'No hay información de pacientes para mostrar todavía.';
+        if (summaryContainer) {
+            summaryContainer.innerHTML = `
+                <h3>Pacientes asignados</h3>
+                <p style="color:var(--text-muted); margin-top:8px;">Aún no tienes pacientes relacionados. El contenido aparecerá aquí cuando el backend los registre.</p>
+            `;
+        }
+    }
+}
+
 function initProfesionalDashboardEvents(dashboardBaseHtml) {
     const menuItems = document.querySelectorAll('.sidebar-profesional .menu-item[data-view]');
     const contentArea = document.getElementById('dynamic-content-area');
@@ -190,6 +277,21 @@ function initProfesionalDashboardEvents(dashboardBaseHtml) {
             } else if (vistaSolicitada === 'pacientes') {
                 contentArea.innerHTML = '<div class="card fade-in" style="text-align:center;"><p style="color:var(--text-muted); font-weight:600;">Cargando pacientes...</p></div>';
                 await renderProfesionalPacientesSection(contentArea);
+            } else if (vistaSolicitada === 'citas') {
+                contentArea.innerHTML = '<div class="card fade-in" style="text-align:center;"><p style="color:var(--text-muted); font-weight:600;">Cargando citas...</p></div>';
+                await renderCitasSection(contentArea);
+            } else if (vistaSolicitada === 'mensajes') {
+                contentArea.innerHTML = '<div class="card fade-in" style="text-align:center;"><p style="color:var(--text-muted); font-weight:600;">Cargando mensajes...</p></div>';
+                await renderMensajesSection(contentArea);
+            } else if (vistaSolicitada === 'resultados') {
+                contentArea.innerHTML = '<div class="card fade-in" style="text-align:center;"><p style="color:var(--text-muted); font-weight:600;">Cargando resultados...</p></div>';
+                await renderResultadosSection(contentArea);
+            } else if (vistaSolicitada === 'medicacion') {
+                contentArea.innerHTML = '<div class="card fade-in" style="text-align:center;"><p style="color:var(--text-muted); font-weight:600;">Cargando indicaciones...</p></div>';
+                await renderIndicacionesSection(contentArea);
+            } else if (vistaSolicitada === 'perfil') {
+                contentArea.innerHTML = '<div class="card fade-in" style="text-align:center;"><p style="color:var(--text-muted); font-weight:600;">Cargando perfil...</p></div>';
+                await renderPerfilSection(contentArea);
             } else {
                 contentArea.innerHTML = '<div class="card fade-in" style="text-align:center;"><p style="color:var(--text-muted); font-weight:600;">Cargando...</p></div>';
                 contentArea.innerHTML = await obtenerDatosSeccion(vistaSolicitada, 'profesional');
@@ -247,27 +349,35 @@ async function renderProfesionalPacientesSection(container) {
 
     const pacientesHtml = pacientes.length
         ? pacientes.map((paciente) => `
-            <div class="card paciente-card">
-                <h4>${paciente.nombre}</h4>
-                <p><strong>Fecha de nacimiento:</strong> ${paciente.fecha_nacimiento}</p>
-                <p><strong>Dirección:</strong> ${paciente.direccion || 'No registrada'}</p>
-                <p><strong>Cuidador:</strong> ${paciente.cuidador_nombre || 'No disponible'}</p>
+            <div class="card patient-dashboard-card">
+                <div class="patient-card-header">
+                    <div>
+                        <h4>${paciente.nombre || 'Paciente sin nombre'}</h4>
+                        <p>${paciente.direccion ? `Dirección: ${paciente.direccion}` : 'Sin dirección registrada'}</p>
+                    </div>
+                    <span class="patient-card-badge">${paciente.cuidador_nombre ? 'Con seguimiento' : 'Por asignar'}</span>
+                </div>
+                <div class="patient-card-body">
+                    <div><strong>Fecha de nacimiento</strong><span>${paciente.fecha_nacimiento || 'No registrada'}</span></div>
+                    <div><strong>Cuidador</strong><span>${paciente.cuidador_nombre || 'No disponible'}</span></div>
+                    <div><strong>Estado</strong><span>${paciente.nivel_alerta || 'Sin alerta'}</span></div>
+                </div>
                 <button class="btn-detalles btn-ver-paciente" data-paciente-id="${paciente.id}" style="margin-top:10px;">Ver / Editar</button>
             </div>
         `).join('')
-        : '<div class="card fade-in"><p style="color:var(--text-muted);">No tienes pacientes asignados aún.</p></div>';
+        : '<div class="card empty-state-card"><div class="empty-state-icon">🩺</div><h4>Aún no tienes pacientes asignados</h4><p>Cuando el backend vincule pacientes a tu profesional, aparecerán aquí con toda su información.</p></div>';
 
     container.innerHTML = `
-        <div class="card fade-in" style="margin-bottom: 18px;">
+        <div class="card fade-in section-hero-card" style="margin-bottom: 18px;">
             <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
                 <div>
                     <h3>Mis Pacientes</h3>
-                    <p>Ver tus pacientes actuales y asignar nuevos pacientes a tu cuidado.</p>
+                    <p>Gestiona tus pacientes vinculados desde la base de datos y mantén el seguimiento clínico actualizado.</p>
                 </div>
                 <button id="btn-asignar-paciente" class="btn-detalles" style="padding: 0.8rem 1rem;">Relacionar paciente</button>
             </div>
         </div>
-        <div id="profesional-pacientes-list">${pacientesHtml}</div>
+        <div id="profesional-pacientes-list" class="section-grid">${pacientesHtml}</div>
         <div id="asignar-paciente-form-container"></div>
     `;
 
@@ -432,6 +542,291 @@ async function renderPacienteDetalle(container, idPaciente) {
             successDiv.style.display = 'block';
         }
     });
+}
+
+function formatFechaCorta(fechaValor) {
+    if (!fechaValor) return 'Sin registro';
+    const fecha = new Date(fechaValor);
+    if (Number.isNaN(fecha.getTime())) return 'Sin registro';
+    return fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function obtenerClaveMensajes() {
+    const session = obtenerSesionActiva();
+    const email = session?.email || 'anonimo';
+    const rol = session?.rol || 'profesional';
+    return `zoe-mensajes-${rol}-${email}`;
+}
+
+function leerMensajes() {
+    try {
+        const guardados = localStorage.getItem(obtenerClaveMensajes());
+        if (!guardados) {
+            const mensajeInicial = [
+                {
+                    id: 1,
+                    remitente: 'Cuidador',
+                    texto: 'Hola, el paciente presentó más energía en la tarde y ya tomó la medicación programada.',
+                    hora: new Date().toISOString(),
+                    tipo: 'entrada'
+                },
+                {
+                    id: 2,
+                    remitente: 'Tú',
+                    texto: 'Gracias. Voy a revisar la evolución y ajustar la indicación si es necesario.',
+                    hora: new Date().toISOString(),
+                    tipo: 'salida'
+                }
+            ];
+            localStorage.setItem(obtenerClaveMensajes(), JSON.stringify(mensajeInicial));
+            return mensajeInicial;
+        }
+        return JSON.parse(guardados);
+    } catch (error) {
+        return [];
+    }
+}
+
+function guardarMensajes(mensajes) {
+    localStorage.setItem(obtenerClaveMensajes(), JSON.stringify(mensajes));
+}
+
+async function renderCitasSection(container) {
+    const session = obtenerSesionActiva();
+    const emailProfesional = session?.email || '';
+    const pacientes = await obtenerPacientes('profesional', emailProfesional);
+
+    if (!pacientes.length) {
+        container.innerHTML = `
+            <div class="card fade-in empty-state-card">
+                <div class="empty-state-icon">🗓️</div>
+                <h4>No hay citas registradas todavía</h4>
+                <p>Cuando el backend asocie un paciente a tu perfil, las próximas visitas aparecerán aquí con su fecha y lugar.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const citasPorPaciente = await Promise.all(pacientes.map(async (paciente) => ({
+        paciente,
+        citas: await obtenerCitasPaciente(paciente.id)
+    })));
+
+    const citas = citasPorPaciente
+        .flatMap(({ paciente, citas }) => citas.map((cita) => ({ ...cita, paciente: paciente.nombre, id_paciente: paciente.id })))
+        .sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora));
+
+    container.innerHTML = `
+        <div class="card fade-in section-hero-card" style="margin-bottom: 16px;">
+            <div>
+                <h3>Citas y visitas</h3>
+                <p>Revisa las próximas consultas del paciente o las visitas coordinadas desde la base de datos.</p>
+            </div>
+        </div>
+        <div class="section-grid">
+            ${citas.length ? citas.map((cita) => `
+                <div class="card info-compact-card">
+                    <div class="card-title-row">
+                        <h4>${cita.paciente || 'Paciente'}</h4>
+                        <span class="status-pill">${cita.estado || 'Agendada'}</span>
+                    </div>
+                    <div class="info-grid">
+                        <div><strong>Motivo</strong><span>${cita.motivo || 'Sin motivo indicado'}</span></div>
+                        <div><strong>Fecha</strong><span>${formatFechaCorta(cita.fecha_hora)}</span></div>
+                        <div><strong>Lugar</strong><span>${cita.lugar || 'Por definir'}</span></div>
+                    </div>
+                </div>
+            `).join('') : '<div class="card empty-state-card"><div class="empty-state-icon">🗓️</div><h4>No hay citas para mostrar</h4><p>El siguiente registro aparecerá cuando exista una visita programada.</p></div>'}
+        </div>
+    `;
+}
+
+async function renderMensajesSection(container) {
+    const session = obtenerSesionActiva();
+    const pacientes = await obtenerPacientes(session?.rol || 'profesional', session?.email || '');
+    const mensajes = leerMensajes();
+    const pacientePrincipal = pacientes[0];
+
+    container.innerHTML = `
+        <div class="card fade-in section-hero-card" style="margin-bottom: 16px;">
+            <div>
+                <h3>Mensajes del equipo</h3>
+                <p>Recibe observaciones del cuidador y responde desde aquí con una conversación más clara y organizada.</p>
+            </div>
+        </div>
+        <div class="card fade-in message-shell">
+            <div class="message-header">
+                <h4>${pacientePrincipal ? `Seguimiento de ${pacientePrincipal.nombre}` : 'Conversación clínica'}</h4>
+                <span class="status-pill">En línea</span>
+            </div>
+            <div class="message-list">
+                ${mensajes.length ? mensajes.map((mensaje) => `
+                    <div class="message-bubble ${mensaje.tipo === 'entrada' ? 'incoming' : 'outgoing'}">
+                        <strong>${mensaje.remitente}</strong>
+                        <p>${mensaje.texto}</p>
+                        <span>${formatFechaCorta(mensaje.hora)}</span>
+                    </div>
+                `).join('') : '<div class="empty-state-card"><div class="empty-state-icon">💬</div><p>No hay mensajes todavía.</p></div>'}
+            </div>
+            <form id="mensaje-form" class="message-form">
+                <textarea id="mensaje-input" rows="3" placeholder="Escribe una respuesta o una indicación para el cuidador..."></textarea>
+                <button type="submit" class="btn-submit">Enviar mensaje</button>
+            </form>
+        </div>
+    `;
+
+    const form = document.getElementById('mensaje-form');
+    form?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const input = document.getElementById('mensaje-input');
+        const texto = input?.value?.trim();
+        if (!texto) return;
+
+        const mensajesActualizados = [
+            ...leerMensajes(),
+            {
+                id: Date.now(),
+                remitente: 'Tú',
+                texto,
+                hora: new Date().toISOString(),
+                tipo: 'salida'
+            }
+        ];
+
+        guardarMensajes(mensajesActualizados);
+        renderMensajesSection(container);
+    });
+}
+
+async function renderResultadosSection(container) {
+    const session = obtenerSesionActiva();
+    const pacientes = await obtenerPacientes(session?.rol || 'profesional', session?.email || '');
+
+    if (!pacientes.length) {
+        container.innerHTML = `
+            <div class="card fade-in empty-state-card">
+                <div class="empty-state-icon">🧪</div>
+                <h4>No hay resultados clínicos para mostrar</h4>
+                <p>Los registros del paciente aparecerán aquí cuando exista información disponible en el backend.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const resultados = await Promise.all(pacientes.map(async (paciente) => {
+        const registros = await obtenerBitacoraRegistros(paciente.id);
+        const ultimoRegistro = registros[0] || null;
+        return {
+            paciente,
+            ultimoRegistro
+        };
+    }));
+
+    container.innerHTML = `
+        <div class="card fade-in section-hero-card" style="margin-bottom: 16px;">
+            <div>
+                <h3>Resultados y seguimiento</h3>
+                <p>Revisa la evolución clínica más reciente de cada paciente y su estado general.</p>
+            </div>
+        </div>
+        <div class="section-grid">
+            ${resultados.map(({ paciente, ultimoRegistro }) => `
+                <div class="card info-compact-card">
+                    <div class="card-title-row">
+                        <h4>${paciente.nombre || 'Paciente'}</h4>
+                        <span class="status-pill">${paciente.estado_general || 'Estable'}</span>
+                    </div>
+                    <div class="info-grid">
+                        <div><strong>Último registro</strong><span>${ultimoRegistro ? (ultimoRegistro.notas || 'Registro sin notas') : 'Sin registros'}</span></div>
+                        <div><strong>Fecha</strong><span>${ultimoRegistro ? formatFechaCorta(ultimoRegistro.fecha_registro) : 'Sin información'}</span></div>
+                        <div><strong>Observaciones</strong><span>${paciente.observaciones || 'Sin observaciones'}</span></div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+async function renderIndicacionesSection(container) {
+    const session = obtenerSesionActiva();
+    const pacientes = await obtenerPacientes(session?.rol || 'profesional', session?.email || '');
+
+    if (!pacientes.length) {
+        container.innerHTML = `
+            <div class="card fade-in empty-state-card">
+                <div class="empty-state-icon">💊</div>
+                <h4>Aún no hay indicaciones activas</h4>
+                <p>Las indicaciones sugeridas para el paciente aparecerán aquí cuando se encuentre información en el sistema.</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="card fade-in section-hero-card" style="margin-bottom: 16px;">
+            <div>
+                <h3>Indicaciones clínicas</h3>
+                <p>Organiza revisiones, horarios de monitoreo y observaciones relevantes para cada paciente.</p>
+            </div>
+        </div>
+        <div class="section-grid">
+            ${pacientes.map((paciente) => `
+                <div class="card info-compact-card">
+                    <div class="card-title-row">
+                        <h4>${paciente.nombre || 'Paciente'}</h4>
+                        <span class="status-pill">${paciente.nivel_alerta || 'Normal'}</span>
+                    </div>
+                    <div class="info-grid">
+                        <div><strong>Monitoreo</strong><span>${paciente.horario_monitoreo || 'Sin horario de monitoreo'}</span></div>
+                        <div><strong>Observaciones</strong><span>${paciente.observaciones || 'Sin observaciones en el registro'}</span></div>
+                        <div><strong>Ubicación</strong><span>${paciente.ubicacion || 'Sin ubicación registrada'}</span></div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+async function renderPerfilSection(container) {
+    const session = obtenerSesionActiva();
+    const pacientes = await obtenerPacientes(session?.rol || 'profesional', session?.email || '');
+    const rolLabel = session?.rol === 'profesional' ? 'Especialista clínico' : 'Cuidador';
+
+    container.innerHTML = `
+        <div class="card fade-in profile-shell">
+            <div class="profile-hero">
+                <div class="profile-avatar">${(session?.nombre || 'Z').charAt(0).toUpperCase()}</div>
+                <div>
+                    <span class="professional-pill">${rolLabel}</span>
+                    <h3>${session?.nombre || 'Usuario Zoe Care'}</h3>
+                    <p>${session?.email || 'Sin correo registrado'}</p>
+                </div>
+            </div>
+            <div class="profile-stats">
+                <div class="profile-stat-card">
+                    <strong>${pacientes.length}</strong>
+                    <span>Pacientes vinculados</span>
+                </div>
+                <div class="profile-stat-card">
+                    <strong>${pacientes.filter((paciente) => paciente.nivel_alerta && paciente.nivel_alerta.toLowerCase() !== 'bajo' && paciente.nivel_alerta.toLowerCase() !== 'normal').length}</strong>
+                    <span>Alertas activas</span>
+                </div>
+                <div class="profile-stat-card">
+                    <strong>${pacientes[0]?.profesional_nombre ? 'Activo' : 'En espera'}</strong>
+                    <span>Estado de coordinación</span>
+                </div>
+            </div>
+            <div class="profile-details">
+                <h4>Resumen del perfil</h4>
+                <p>Tu información queda centralizada para revisar pacientes, coordinar con el cuidador y mantener un seguimiento más claro.</p>
+                ${pacientes.length ? `
+                    <ul class="caregiver-checklist">
+                        ${pacientes.slice(0, 3).map((paciente) => `<li><span>✓</span>${paciente.nombre || 'Paciente sin nombre'}</li>`).join('')}
+                    </ul>
+                ` : '<p style="color:var(--text-muted);">Aún no hay pacientes vinculados a tu perfil.</p>'}
+            </div>
+        </div>
+    `;
 }
 
 function initLogoutEvents() {

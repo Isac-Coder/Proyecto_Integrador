@@ -15,7 +15,9 @@ const mimeTypes = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
-  '.ico': 'image/x-icon'
+  '.ico': 'image/x-icon',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm'
 };
 
 const root = path.join(__dirname, 'src');

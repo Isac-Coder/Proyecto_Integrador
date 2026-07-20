@@ -115,6 +115,26 @@ Estos archivos fueron los más impactados porque contienen la lógica de las vis
 
 ---
 
+## Qué se está mejorando ahora
+
+Se está realizando una segunda ola de refinamiento visual y de experiencia para elevar la calidad percibida del sistema antes de avanzar a la siguiente fase funcional.
+
+### 5. Rediseño premium del módulo de profesional
+- Se renovó el dashboard del profesional con una estética más elegante, cercana a una herramienta clínica moderna.
+- Se incorporaron tarjetas de resumen, chips de estado y bloques de información visual para reforzar la sensación de control y organización.
+- Se mejoró el tratamiento visual de la sidebar, los encabezados y las tarjetas de seguimiento para que el módulo se vea mucho más sólido.
+
+### 6. Video de fondo en el login
+- Se integró la estructura visual para mostrar un video de fondo en la pantalla de acceso.
+- El login ahora incluye una capa de superposición, un efecto de profundidad y una presentación más premium.
+- El video queda preparado para funcionar al colocar el archivo en la carpeta de assets del frontend.
+
+### 7. Ajuste de carga de estilos y soporte multimedia
+- Se unificó la carga de estilos para que las vistas del login, cuidador y profesional compartan la misma hoja visual.
+- Se añadió soporte en el servidor para archivos de video en formato MP4 y WebM.
+
+---
+
 ## Qué se puede mejorar después
 
 Aunque esta versión ya dejó muchas utilidades operativas, todavía hay espacio para avanzar mucho más.

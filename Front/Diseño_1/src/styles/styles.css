@@ -209,8 +209,246 @@ section[id] {
 /* ==========================================================================
    5. VISTAS: LOGIN & REGISTER (FORMULARIOS DE ACCESO)
    ========================================================================== */
+
+.section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.info-compact-card,
+.message-shell,
+.profile-shell {
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(242,247,245,0.95));
+  box-shadow: 0 12px 30px rgba(19, 37, 34, 0.09);
+  border: 1px solid rgba(70, 84, 83, 0.08);
+}
+
+.card-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(210, 150, 127, 0.14);
+  color: #8a4b2a;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.info-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.info-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(70, 84, 83, 0.08);
+}
+
+.info-grid > div:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.info-grid strong {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  color: #70827f;
+  letter-spacing: 0.08em;
+}
+
+.info-grid span {
+  color: #2f3f3c;
+  line-height: 1.5;
+}
+
+.message-shell {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 360px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.message-bubble {
+  padding: 12px 14px;
+  border-radius: 14px;
+  max-width: 78%;
+  box-shadow: 0 6px 18px rgba(19, 37, 34, 0.06);
+}
+
+.message-bubble strong {
+  font-size: 0.8rem;
+  display: block;
+  margin-bottom: 4px;
+  color: #37504d;
+}
+
+.message-bubble p {
+  margin-bottom: 6px;
+  line-height: 1.5;
+  color: #31403d;
+}
+
+.message-bubble span {
+  font-size: 0.72rem;
+  color: #7b8d88;
+}
+
+.message-bubble.incoming {
+  background: #eef7f4;
+  align-self: flex-start;
+}
+
+.message-bubble.outgoing {
+  background: #fff1ea;
+  align-self: flex-end;
+}
+
+.message-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.message-form textarea {
+  width: 100%;
+  border: 1px solid rgba(70, 84, 83, 0.14);
+  border-radius: 14px;
+  padding: 12px 14px;
+  resize: vertical;
+  min-height: 90px;
+  font-family: inherit;
+}
+
+.profile-shell {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, #4d6b61, #d2967f);
+  box-shadow: 0 10px 24px rgba(77, 107, 97, 0.2);
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.profile-stat-card {
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(70, 84, 83, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profile-stat-card strong {
+  font-size: 1.1rem;
+  color: #1f302c;
+}
+
+.profile-stat-card span {
+  font-size: 0.8rem;
+  color: #6d7e7a;
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.empty-state-card {
+  text-align: center;
+  padding: 24px;
+}
+
+.empty-state-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+  .message-bubble {
+    max-width: 92%;
+  }
+
+  .profile-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+.login-shell {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(135deg, #07141f 0%, #1c3342 50%, #2b4c3f 100%);
+}
+.login-shell .login-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.9) brightness(0.76);
+}
+.login-shell .login-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(7, 20, 31, 0.78) 0%, rgba(44, 68, 88, 0.45) 45%, rgba(43, 76, 63, 0.7) 100%);
+  backdrop-filter: blur(2px);
+}
 .login-container {
-  background-color: #E3DDD5;
+  position: relative;
+  z-index: 2;
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -218,13 +456,27 @@ section[id] {
   padding: 24px;
 }
 .login-container .login-card {
-  background-color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(18px);
   padding: 44px 40px;
-  border-radius: 16px;
+  border-radius: 24px;
   width: 100%;
-  max-width: 460px;
-  box-shadow: 0 12px 40px rgba(59, 68, 67, 0.05);
-  border: 1px solid rgba(59, 68, 67, 0.03);
+  max-width: 480px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+.login-container .login-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border-radius: 999px;
+  background: rgba(70, 84, 83, 0.08);
+  color: #2b4c3f;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 .login-container .login-header {
   text-align: center;
@@ -739,10 +991,213 @@ section[id] {
   text-transform: uppercase;
 }
 
-.dashboard-layout.layout-profesional .next-appointment-card {
-  background: linear-gradient(135deg, #465453 0%, #35403f 100%);
+.dashboard-layout.layout-profesional .professional-hero-card {
+  background: linear-gradient(135deg, rgba(70, 84, 83, 0.96) 0%, rgba(53, 64, 63, 0.95) 100%);
   color: #FFFFFF;
   border: none;
+  box-shadow: 0 18px 44px rgba(38, 49, 48, 0.22);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+.dashboard-layout.layout-profesional .professional-hero-card h3 {
+  color: #FFFFFF;
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+.dashboard-layout.layout-profesional .professional-hero-card p {
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+}
+.dashboard-layout.layout-profesional .professional-pill {
+  display: inline-flex;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #f5e8dd;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.dashboard-layout.layout-profesional .professional-hero-metrics {
+  display: grid;
+  gap: 10px;
+  min-width: 220px;
+}
+.dashboard-layout.layout-profesional .professional-metric-chip {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.dashboard-layout.layout-profesional .professional-summary-card,
+.dashboard-layout.layout-cuidador .caregiver-dashboard-summary,
+.dashboard-layout.layout-profesional .section-hero-card,
+.dashboard-layout.layout-cuidador .section-hero-card {
+  background: linear-gradient(135deg, #fdfaf6 0%, #f5ebdf 100%);
+  border: 1px solid rgba(70, 84, 83, 0.08);
+}
+.dashboard-layout.layout-profesional .empty-state-card,
+.dashboard-layout.layout-cuidador .empty-state-card {
+  display: grid;
+  gap: 10px;
+  text-align: center;
+  justify-items: center;
+  padding: 36px 24px;
+  border: 1px dashed rgba(70, 84, 83, 0.2);
+  background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(245,235,223,0.8));
+}
+.dashboard-layout.layout-profesional .empty-state-icon,
+.dashboard-layout.layout-cuidador .empty-state-icon {
+  font-size: 2rem;
+}
+.dashboard-layout.layout-profesional .section-grid,
+.dashboard-layout.layout-cuidador .section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+.dashboard-layout.layout-profesional .patient-dashboard-card,
+.dashboard-layout.layout-cuidador .patient-dashboard-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid rgba(70, 84, 83, 0.08);
+}
+.dashboard-layout.layout-profesional .patient-card-header,
+.dashboard-layout.layout-cuidador .patient-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.dashboard-layout.layout-profesional .patient-card-header h4,
+.dashboard-layout.layout-cuidador .patient-card-header h4 {
+  margin-bottom: 4px;
+  color: #2f3f3d;
+}
+.dashboard-layout.layout-profesional .patient-card-header p,
+.dashboard-layout.layout-cuidador .patient-card-header p {
+  color: rgba(59, 68, 67, 0.7);
+  font-size: 0.9rem;
+}
+.dashboard-layout.layout-profesional .patient-card-badge,
+.dashboard-layout.layout-cuidador .patient-card-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(70, 84, 83, 0.08);
+  color: #465453;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.dashboard-layout.layout-profesional .patient-card-body,
+.dashboard-layout.layout-cuidador .patient-card-body {
+  display: grid;
+  gap: 8px;
+}
+.dashboard-layout.layout-profesional .patient-card-body div,
+.dashboard-layout.layout-cuidador .patient-card-body div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+.dashboard-layout.layout-profesional .patient-card-body strong,
+.dashboard-layout.layout-cuidador .patient-card-body strong {
+  color: #4b5a57;
+}
+.dashboard-layout.layout-profesional .patient-card-body span,
+.dashboard-layout.layout-cuidador .patient-card-body span {
+  color: rgba(59, 68, 67, 0.78);
+  text-align: right;
+}
+.dashboard-layout.layout-profesional .professional-summary-card h3,
+.dashboard-layout.layout-cuidador .caregiver-dashboard-summary h3 {
+  color: #465453;
+  margin-bottom: 10px;
+}
+.dashboard-layout.layout-profesional .professional-patient-list,
+.dashboard-layout.layout-cuidador .caregiver-patient-list {
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+  color: #4b5a57;
+}
+.dashboard-layout.layout-profesional .professional-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 8px;
+}
+@media (max-width: 992px) {
+  .dashboard-layout.layout-profesional .professional-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 576px) {
+  .dashboard-layout.layout-profesional .professional-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-layout.layout-profesional .professional-hero-card {
+    flex-direction: column;
+  }
+  .dashboard-layout.layout-profesional .professional-hero-metrics {
+    min-width: unset;
+    width: 100%;
+  }
+}
+.dashboard-layout.layout-profesional .professional-stat-card {
+  background: linear-gradient(135deg, #fbf7f2 0%, #f4e9dd 100%);
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(70, 84, 83, 0.08);
+  box-shadow: 0 10px 26px rgba(59, 68, 67, 0.05);
+}
+.dashboard-layout.layout-profesional .professional-stat-card .professional-stat-label {
+  display: block;
+  color: rgba(59, 68, 67, 0.7);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 8px;
+}
+.dashboard-layout.layout-profesional .professional-stat-card strong {
+  font-size: 1.15rem;
+  color: #2f3f3d;
+}
+.dashboard-layout.layout-profesional .next-appointment-card {
+  background: linear-gradient(135deg, #2f4c4a 0%, #1f2f2e 100%);
+  color: #FFFFFF;
+  border: none;
+  box-shadow: 0 16px 40px rgba(31, 47, 46, 0.22);
+}
+.dashboard-layout.layout-profesional .next-appointment-card h3 {
+  color: rgba(255, 255, 255, 0.7);
+}
+.dashboard-layout.layout-profesional .professional-side-panel {
+  background: linear-gradient(145deg, #fdfaf6 0%, #f1e8de 100%);
+}
+.dashboard-layout.layout-profesional .professional-signal-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+.dashboard-layout.layout-profesional .professional-signal {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #45625a;
+  font-size: 0.84rem;
+  font-weight: 600;
 }
 .dashboard-layout.layout-profesional .next-appointment-card h3 {
   color: rgba(255, 255, 255, 0.6);

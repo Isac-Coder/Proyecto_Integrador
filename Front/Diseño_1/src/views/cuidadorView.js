@@ -7,7 +7,7 @@ export function cuidadorView() {
         const styleLink = document.createElement('link');
         styleLink.id = 'zoe-global-style';
         styleLink.rel = 'stylesheet';
-        styleLink.href = '/Proyecto_Integrador/Front/Diseño_1/src/styles/styles.css';
+        styleLink.href = '/styles/styles.css';
         document.head.appendChild(styleLink);
     }
 
@@ -17,20 +17,22 @@ export function cuidadorView() {
                 <div class="card caregiver-hero-card">
                     <div>
                         <span class="caregiver-pill">Tu rol de cuidado hoy</span>
-                        <h3>Acompañas a Don Alberto con calma, observación y cariño</h3>
-                        <p>Tu trabajo diario ayuda a mantener la rutina, prevenir riesgos y dar tranquilidad a la familia. Cada registro cuenta para cuidar mejor.</p>
+                        <h3 id="caregiver-hero-title">Acompañas a tu paciente con calma, observación y cariño</h3>
+                        <p id="caregiver-hero-description">Tu trabajo diario ayuda a mantener la rutina, prevenir riesgos y dar tranquilidad a la familia. Cada registro cuenta para cuidar mejor.</p>
                     </div>
                     <div class="caregiver-hero-meta">
                         <div class="caregiver-highlight">
                             <strong>Próximo turno</strong>
-                            <span>Mañana · 08:00</span>
+                            <span id="caregiver-next-turn">Cargando información...</span>
                         </div>
                         <div class="caregiver-highlight">
                             <strong>Estado general</strong>
-                            <span>Estable · muy buen ánimo</span>
+                            <span id="caregiver-status">Esperando datos del paciente</span>
                         </div>
                     </div>
                 </div>
+
+                <div id="caregiver-dashboard-summary" class="card caregiver-dashboard-summary"></div>
 
                 <div class="caregiver-grid">
                     <div class="card caregiver-panel">
@@ -95,6 +97,7 @@ export function cuidadorView() {
         initCuidadorEvents(estructuraCuidadorBase);
         initLogoutEvents();
         actualizarIndicadoresDeNotificacion();
+        cargarContenidoDashboardCuidador();
     }, 0);
 
     // Activamos la clase layout-cuidador e inyectamos el botón hamburguesa con id="hamburguesa-toggle"
@@ -138,6 +141,45 @@ export function cuidadorView() {
             </div>
         </div>
     `;
+}
+
+async function cargarContenidoDashboardCuidador() {
+    const session = obtenerSesionActiva();
+    const emailCuidador = session?.email || '';
+    const pacientes = await obtenerPacientes('cuidador', emailCuidador);
+
+    const heroTitle = document.getElementById('caregiver-hero-title');
+    const heroDescription = document.getElementById('caregiver-hero-description');
+    const nextTurn = document.getElementById('caregiver-next-turn');
+    const status = document.getElementById('caregiver-status');
+    const summaryContainer = document.getElementById('caregiver-dashboard-summary');
+
+    if (pacientes.length) {
+        const pacientePrincipal = pacientes[0];
+        if (heroTitle) heroTitle.textContent = `Acompañas a ${pacientePrincipal.nombre || 'tu paciente'} con calma y seguimiento`;
+        if (heroDescription) heroDescription.textContent = 'Los pacientes asignados a tu perfil se cargan directamente desde la base de datos del backend.';
+        if (nextTurn) nextTurn.textContent = pacientePrincipal.direccion ? `Revisión · ${pacientePrincipal.direccion}` : 'Revisión programada';
+        if (status) status.textContent = pacientePrincipal.profesional_nombre ? `Con ${pacientePrincipal.profesional_nombre}` : 'Esperando profesional';
+        if (summaryContainer) {
+            summaryContainer.innerHTML = `
+                <h3>Pacientes bajo tu cuidado</h3>
+                <ul class="caregiver-patient-list">
+                    ${pacientes.map((paciente) => `<li><strong>${paciente.nombre || 'Paciente sin nombre'}</strong>${paciente.profesional_nombre ? ` · Médico: ${paciente.profesional_nombre}` : ''}</li>`).join('')}
+                </ul>
+            `;
+        }
+    } else {
+        if (heroTitle) heroTitle.textContent = 'Aún no tienes pacientes asignados';
+        if (heroDescription) heroDescription.textContent = 'Cuando un paciente sea creado y vinculado a tu perfil, aparecerá aquí con su información y seguimiento.';
+        if (nextTurn) nextTurn.textContent = 'Sin pacientes aún';
+        if (status) status.textContent = 'Esperando información';
+        if (summaryContainer) {
+            summaryContainer.innerHTML = `
+                <h3>Pacientes bajo tu cuidado</h3>
+                <p style="color:var(--text-muted); margin-top:8px;">Aún no hay pacientes relacionados con tu cuenta. El contenido aparecerá automáticamente cuando el backend registre uno.</p>
+            `;
+        }
+    }
 }
 
 function initCuidadorEvents(baseHtml) {
@@ -663,27 +705,35 @@ async function renderPacientesSection(container) {
 
     const pacientesHtml = pacientes.length
         ? pacientes.map((paciente) => `
-            <div class="card paciente-card">
-              <h4>${paciente.nombre}</h4>
-              <p><strong>Fecha de nacimiento:</strong> ${paciente.fecha_nacimiento}</p>
-              <p><strong>Dirección:</strong> ${paciente.direccion || 'No registrada'}</p> 
-              <p><strong>Médico asignado:</strong> ${paciente.profesional_nombre || 'Sin médico asignado'}</p>
+            <div class="card patient-dashboard-card">
+              <div class="patient-card-header">
+                <div>
+                  <h4>${paciente.nombre || 'Paciente sin nombre'}</h4>
+                  <p>${paciente.direccion ? `Dirección: ${paciente.direccion}` : 'Sin dirección registrada'}</p>
+                </div>
+                <span class="patient-card-badge">${paciente.profesional_nombre ? 'Con médico' : 'Sin médico'}</span>
+              </div>
+              <div class="patient-card-body">
+                <div><strong>Fecha de nacimiento</strong><span>${paciente.fecha_nacimiento || 'No registrada'}</span></div>
+                <div><strong>Médico asignado</strong><span>${paciente.profesional_nombre || 'Sin médico asignado'}</span></div>
+                <div><strong>Estado</strong><span>${paciente.nivel_alerta || 'Sin alerta'}</span></div>
+              </div>
               <button class="btn btn-secondary btn-ver-paciente" data-paciente-id="${paciente.id}">Ver / Editar</button>
             </div>
           `).join('')
-        : '<div class="card fade-in"><p style="color:var(--text-muted);">No tienes pacientes asignados aún.</p></div>';
+        : '<div class="card empty-state-card"><div class="empty-state-icon">🤝</div><h4>Aún no tienes pacientes asignados</h4><p>Cuando un paciente sea creado y vinculado a tu perfil, aparecerá aquí con su información de seguimiento.</p></div>';
 
     container.innerHTML = `
-        <div class="card fade-in" style="margin-bottom: 18px;">
+        <div class="card fade-in section-hero-card" style="margin-bottom: 18px;">
             <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
                 <div>
                     <h3>Mis Pacientes</h3>
-                    <p>Registra nuevos pacientes y relacionalos con un profesional.</p>
+                    <p>Registra nuevos pacientes y relacionalos con un profesional desde la base de datos del sistema.</p>
                 </div>
                 <button id="btn-crear-paciente" class="btn btn-primary">Crear paciente</button>
             </div>
         </div>
-        <div id="pacientes-list" class="pacientes-list">${pacientesHtml}</div>
+        <div id="pacientes-list" class="section-grid">${pacientesHtml}</div>
         <div id="paciente-form-container"></div>
     `;
 
