@@ -1,0 +1,15 @@
+{
+  "name": "proyecto-i",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node tools/run-all.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.0",
+    "cors": "^2.8.4",
+    "dotenv": "^16.4.1",
+    "express": "^4.19.0",
+    "pg": "^8.2.0"
+  }
+}
