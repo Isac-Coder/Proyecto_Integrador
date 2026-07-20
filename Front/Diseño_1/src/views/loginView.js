@@ -12,7 +12,7 @@ export function loginView() {
         <div class="login-container video-page">
             <div class="video-background">
                 <video autoplay muted loop playsinline class="background-video-element">
-                    <source src="assets/backgroun_Video%20(1).mp4" type="video/mp4">
+                    <source src="assets/bv.mp4" type="video/mp4">
                 </video>
             </div>
             <div class="login-card">
