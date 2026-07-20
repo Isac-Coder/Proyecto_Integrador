@@ -152,7 +152,7 @@ export function HomeView() {
 
                         <article class="team-card">
                             <div class="team-avatar">
-                                <img src="views/zoe-landing/images/ale-j.jpg" alt="Alejandra Jiménez, Frontend Developer">
+                                <img src="views/zoe-landing/images/ale-.webp" alt="Alejandra Jiménez, Frontend Developer">
                             </div>
                             <h3>Alejandra Jimenez</h3>
                             <p class="role">Frontend Developer</p>
@@ -163,10 +163,10 @@ export function HomeView() {
 
                         <article class="team-card">
                             <div class="team-avatar">
-                                <img src="views/zoe-landing/images/maria-fernandez.jpg" alt="María Fernández, UX/UI Designer">
+                                <img src="views/zoe-landing/images/sebastian-zoe.webp" alt="Sebastián Ortiz, Scrum Master">
                             </div>
                             <h3>Sebastian Ortiz</h3>
-                            <p class="role">UX/UI Designer</p>
+                            <p class="role">Scrum Master</p>
                             <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="LinkedIn de Sebastián Ortiz">
                                 <i class="fab fa-linkedin"></i>
                             </a>
@@ -174,10 +174,10 @@ export function HomeView() {
 
                         <article class="team-card">
                             <div class="team-avatar">
-                                <img src="views/zoe-landing/images/juan-pablo.jpg" alt="Juan Pablo Gómez, Database Specialist">
+                                <img src="views/zoe-landing/images/isaac-zoe.webp" alt="Juan Pablo Gómez, Database Specialist">
                             </div>
-                            <h3>Maryuris Movilla</h3>
-                            <p class="role">Database Specialist</p>
+                            <h3>Isaac Valdes</h3>
+                            <p class="role">Backend Developer</p>
                             <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="LinkedIn de Maryuris Movilla">
                                 <i class="fab fa-linkedin"></i>
                             </a>
@@ -185,10 +185,10 @@ export function HomeView() {
 
                         <article class="team-card">
                             <div class="team-avatar">
-                                <img src="views/zoe-landing/images/juan-pablo.jpg" alt="Juan Pablo Gómez, Database Specialist">
+                                <img src="views/zoe-landing/images/maru-.jpg" alt="Maryuris Movilla, Frontend Developer">
                             </div>
-                            <h3>Isaac Valdes</h3>
-                            <p class="role">Database Specialist</p>
+                            <h3>Maryuris Movilla</h3>s
+                            <p class="role">Frontend Developer</p>
                             <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="LinkedIn de Isaac Valdes">
                                 <i class="fab fa-linkedin"></i>
                             </a>
@@ -196,10 +196,10 @@ export function HomeView() {
 
                         <article class="team-card">
                             <div class="team-avatar">
-                                <img src="views/zoe-landing/images/juan-pablo.jpg" alt="Juan Pablo Gómez, Database Specialist">
+                                <img src="views/zoe-landing/images/luis-m.jpg" alt="Juan Pablo Gómez, Database Specialist">
                             </div>
                             <h3>Luis Medrano</h3>
-                            <p class="role">Database Specialist</p>
+                            <p class="role">Backend Developer</p>
                             <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="LinkedIn de Luis Medrano">
                                 <i class="fab fa-linkedin"></i>
                             </a>
