@@ -6,7 +6,21 @@ const { connectDatabase } = require('./config/database');
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(cors({
+  origin(origin, callback) {
+    // Permite herramientas sin origen (health checks, curl y Postman).
+    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Origen no permitido por CORS.'));
+  }
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

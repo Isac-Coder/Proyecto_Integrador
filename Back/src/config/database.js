@@ -2,18 +2,31 @@ const path = require('path');
 const dotenv = require('dotenv');
 const { Pool } = require('pg');
 
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+// Carga las variables locales desde la raíz del proyecto y permite que Render
+// use las variables inyectadas directamente en el entorno.
+dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 let pool;
 
 async function connectDatabase() {
   if (pool) return pool;
 
-  const { DB_URL, DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME } = process.env;
+  const {
+    DATABASE_URL,
+    DB_URL,
+    DB_HOST,
+    DB_PORT,
+    DB_USER,
+    DB_PASSWORD,
+    DB_NAME
+  } = process.env;
 
-  if (DB_URL) {
+  const connectionString = DATABASE_URL || DB_URL;
+
+  if (connectionString) {
     pool = new Pool({
-      connectionString: DB_URL,
+      connectionString,
       ssl: { rejectUnauthorized: false },
       family: 4,
       max: 10,
