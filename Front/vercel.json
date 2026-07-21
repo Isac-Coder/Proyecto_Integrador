@@ -1,7 +1,9 @@
 {
   "version": 2,
-  "routes": [
-    { "src": "/(.*\\.(?:css|js|png|jpg|jpeg|svg|ico|json|html))", "dest": "/$1" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/src/index.html"
+    }
   ]
 }
