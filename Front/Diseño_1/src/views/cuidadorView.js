@@ -1,5 +1,5 @@
 // src/views/cuidadorView.js
-import { obtenerDatosSeccion, obtenerPacientes, obtenerProfesionales, crearPaciente, obtenerPacienteDetalle, actualizarPaciente, obtenerBitacoraPlantillas, crearBitacoraPlantilla, obtenerBitacoraRegistros, crearBitacoraRegistro, obtenerMedicamentosPaciente, crearMedicamentoPaciente, actualizarMedicamentoPaciente, obtenerCitasPaciente, crearCitaPaciente, actualizarCitaPaciente, eliminarCitaPaciente } from '../services/data.service.js';
+import { obtenerDatosSeccion, obtenerPacientes, obtenerProfesionales, crearPaciente, obtenerPacienteDetalle, actualizarPaciente, obtenerBitacoraPlantillas, crearBitacoraPlantilla, obtenerBitacoraRegistros, crearBitacoraRegistro, obtenerMedicamentosPaciente, crearMedicamentoPaciente, actualizarMedicamentoPaciente, obtenerCitasPaciente, crearCitaPaciente, actualizarCitaPaciente, eliminarCitaPaciente, crearSolicitudVinculacion, obtenerSolicitudesEnviadas } from '../services/data.service.js';
 import { cerrarSesion, obtenerSesionActiva } from '../services/auth.services.js';
 
 export function cuidadorView() {
@@ -11,87 +11,128 @@ export function cuidadorView() {
         document.head.appendChild(styleLink);
     }
 
-    const estructuraCuidadorBase = `
-        <div class="dashboard-grid fade-in">
-            <section class="main-content-column">
-                <div class="card caregiver-hero-card">
-                    <div>
-                        <span class="caregiver-pill">Tu rol de cuidado hoy</span>
-                        <h3 id="caregiver-hero-title">Acompañas a tu paciente con calma, observación y cariño</h3>
-                        <p id="caregiver-hero-description">Tu trabajo diario ayuda a mantener la rutina, prevenir riesgos y dar tranquilidad a la familia. Cada registro cuenta para cuidar mejor.</p>
-                    </div>
-                    <div class="caregiver-hero-meta">
-                        <div class="caregiver-highlight">
-                            <strong>Próximo turno</strong>
-                            <span id="caregiver-next-turn">Cargando información...</span>
+        const estructuraCuidadorBase = `
+            <div class="dashboard-grid fade-in">
+
+                <section class="main-content-column">
+
+                    <div class="card caregiver-hero-card">
+                        <div style="display:flex; align-items:flex-start; gap:16px;">
+                            <div class="caregiver-hero-icon">
+                                <i class="ti ti-users"></i>
+                            </div>
+                            <div>
+                                <span class="caregiver-pill">Tu rol de cuidado hoy</span>
+                                <h3 id="caregiver-hero-title">Acompanas a tu paciente con calma, observacion y carino</h3>
+                                <p id="caregiver-hero-description">Tu trabajo diario ayuda a mantener la rutina, prevenir riesgos y dar tranquilidad a la familia. Cada registro cuenta para cuidar mejor.</p>
+                            </div>
                         </div>
-                        <div class="caregiver-highlight">
-                            <strong>Estado general</strong>
-                            <span id="caregiver-status">Esperando datos del paciente</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="caregiver-dashboard-summary" class="card caregiver-dashboard-summary"></div>
-
-                <div class="caregiver-grid">
-                    <div class="card caregiver-panel">
-                        <h4>Checklist de apoyo diario</h4>
-                        <ul class="caregiver-checklist">
-                            <li><span>✓</span>Medicación de la mañana registrada correctamente</li>
-                            <li><span>✓</span>Ingreso de líquidos y alimentación revisado</li>
-                            <li><span>✓</span>Observaciones clínicas actualizadas</li>
-                        </ul>
-                    </div>
-
-                    <div class="card caregiver-panel">
-                        <h4>Recordatorio de cuidado</h4>
-                        <div class="caregiver-tip">
-                            <span>💧</span>
-                            <p>Revisa la hidratación, mantén la rutina y comunica cualquier cambio en la respiración o energía.</p>
+                        <div class="caregiver-hero-meta">
+                            <div class="caregiver-highlight">
+                                <strong>Proximo turno</strong>
+                                <span id="caregiver-next-turn">Cargando informacion...</span>
+                            </div>
+                            <div class="caregiver-highlight">
+                                <strong>Estado general</strong>
+                                <span id="caregiver-status">Esperando datos del paciente</span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="vitals-grid">
-                    <div class="vital-card vital-pressure">
-                        <span class="vital-value">110/70</span>
-                        <span class="vital-label">Presión Arterial (Normal)</span>
+                                        <div id="caregiver-kpi-row" class="caregiver-kpi-row">
+                        <div class="kpi-card kpi-clickable" data-tipo="pacientes" title="Click para ver detalle"><i class="ti ti-users kpi-icon"></i><span class="kpi-value">0</span><span class="kpi-label">Pacientes</span></div>
+                        <div class="kpi-card kpi-clickable" data-tipo="medicamentos" title="Click para ver detalle"><i class="ti ti-pill kpi-icon"></i><span class="kpi-value">0</span><span class="kpi-label">Medicamentos</span></div>
+                        <div class="kpi-card kpi-clickable" data-tipo="citas" title="Click para ver detalle"><i class="ti ti-calendar-event kpi-icon"></i><span class="kpi-value">0</span><span class="kpi-label">Citas hoy</span></div>
+                        <div class="kpi-card kpi-clickable" data-tipo="registros" title="Click para ver detalle"><i class="ti ti-notes kpi-icon"></i><span class="kpi-value">0</span><span class="kpi-label">Registros</span></div>
                     </div>
-                    <div class="vital-card vital-oxygen">
-                        <span class="vital-value">97%</span>
-                        <span class="vital-label">Saturación de Oxígeno</span>
-                    </div>
-                </div>
-            </section>
 
-            <aside class="right-content-column">
-                <div class="card">
-                    <h3>Medicamentos del Turno</h3>
-                    <p style="font-size: 0.85rem; color: #6a7a77; margin-bottom: 8px;">Progreso de suministro diario</p>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" style="width: 33%;"></div>
-                    </div>
-                    <div class="progress-labels">
-                        <span>1 de 3 dosis entregadas</span>
-                    </div>
-                </div>
+                    <div id="caregiver-dashboard-summary" class="card caregiver-dashboard-summary"></div>
 
-                <div class="card">
-                    <h3>Controles Rápidos</h3>
-                    <ul class="actions-list">
-                        <li id="btn-med">Registrar dosis del turno <span class="arrow">›</span></li>
-                        <li id="btn-alerta" style="color: #ef4444;">Notificar alerta familiar <span class="arrow" style="color: #ef4444;">›</span></li>
-                    </ul>
-                </div>
+                                        <div class="card">
+                                            <div class="section-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                                                <h3><i class="ti ti-chart-line" style="margin-right:8px;"></i>Graficos de Bitacora</h3>
+                                                <div class="form-group-inline" style="display:flex; align-items:center; gap:6px;">
+                                                    <label style="font-size:0.8rem; font-weight:600;">Paciente:</label>
+                                                    <select id="vitals-paciente-select" class="form-input" style="font-size:0.8rem; padding:4px 8px;">
+                                                        <option value="">Cargando...</option>
+                                                    </select>
+                                                    <label style="font-size:0.8rem; font-weight:600;">Plantilla:</label>
+                                                    <select id="vitals-plantilla-select" class="form-input" style="font-size:0.8rem; padding:4px 8px;">
+                                                        <option value="">Sin plantillas</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div id="caregiver-vitals-table-container">
+                                                <p style="color:var(--text-muted); padding:8px 0;">Selecciona un paciente y una plantilla de bitacora para visualizar los datos en graficos.</p>
+                                            </div>
+                                        </div>
 
-                <div class="card">
-                    <h3>Enfoque del día</h3>
-                    <p style="color: #5f6e6b; line-height: 1.6;">Escucha al paciente, mantén la calma y registra cada cambio con claridad para apoyar mejor la recuperación.</p>
-                </div>
-            </aside>
-        </div>
-    `;
+                    <div class="caregiver-grid">
+                        <div class="card caregiver-panel">
+                            <h4><i class="ti ti-checklist" style="margin-right:8px;"></i>Checklist de apoyo diario</h4>
+                            <ul id="caregiver-checklist-list" class="caregiver-checklist">
+                                <li><span>&#10003;</span>Medicacion de la manana registrada correctamente</li>
+                                <li><span>&#10003;</span>Ingreso de liquidos y alimentacion revisado</li>
+                                <li><span>&#10003;</span>Observaciones clinicas actualizadas</li>
+                            </ul>
+                        </div>
+
+                        <div class="card caregiver-panel">
+                            <h4><i class="ti ti-droplet" style="margin-right:8px;"></i>Recordatorio de cuidado</h4>
+                            <div class="caregiver-tip">
+                                <i class="ti ti-droplet"></i>
+                                <p>Revisa la hidratacion, mantén la rutina y comunica cualquier cambio en la respiracion o energia.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <aside class="right-content-column">
+
+                    <div class="card">
+                        <h3><i class="ti ti-pill" style="margin-right:8px;"></i>Medicamentos del Turno</h3>
+                        <p style="font-size: 0.85rem; color: #6a7a77; margin-bottom: 8px;">Progreso de suministro diario</p>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="caregiver-meds-progress" style="width: 0%;"></div>
+                        </div>
+                        <div class="progress-labels">
+                            <span id="caregiver-meds-label">Cargando...</span>
+                        </div>
+                        <p id="caregiver-meds-subtitle" style="font-size:0.82rem; color:var(--text-muted); margin-top:6px;"></p>
+                    </div>
+
+                    <div class="card">
+                        <h3><i class="ti ti-calendar-event" style="margin-right:8px;"></i>Proximas citas</h3>
+                        <div id="caregiver-next-citas-content">
+                            <p style="color: #5f6e6b; line-height: 1.6;">Cargando...</p>
+                        </div>
+                    </div>
+
+                    <div class="card" id="caregiver-enfoque-card">
+                        <h3><i class="ti ti-notes" style="margin-right:8px;"></i>Ultimo registro de bitacora</h3>
+                        <div id="caregiver-enfoque-content">
+                            <p style="color: #5f6e6b; line-height: 1.6;">Cargando...</p>
+                        </div>
+                    </div>
+
+                    <div class="card caregiver-register-meds-card">
+                        <h3><i class="ti ti-plus" style="margin-right:8px;"></i>Registrar Medicamento</h3>
+                        <p style="font-size: 0.85rem; color: #6a7a77; margin-bottom: 12px;">Agrega un nuevo medicamento al tratamiento de un paciente</p>
+                        <div id="caregiver-register-meds-form">
+                            <div class="form-group" style="margin-bottom:10px;">
+                                <label>Selecciona un paciente</label>
+                                <select id="caregiver-register-paciente-select" class="form-input">
+                                    <option value="">Cargando pacientes...</option>
+                                </select>
+                            </div>
+                            <button id="btn-ir-a-registrar-medicamento" class="btn btn-primary" style="width:100%;">
+                                <i class="ti ti-pill" style="margin-right:6px;"></i>Ir a Registrar Medicamento
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        `;
 
     setTimeout(() => {
         initCuidadorEvents(estructuraCuidadorBase);
@@ -123,9 +164,6 @@ export function cuidadorView() {
                         <span></span>
                         <span></span>
                     </button>
-
-
-
                                         <div class="welcome-text">
                         <h2 id="header-cuidador-nombre">Hola, cargando...</h2>
                         <span class="current-date" id="header-cuidador-fecha"></span>
@@ -136,12 +174,6 @@ export function cuidadorView() {
                         </div>
                         <div class="avatar" id="header-cuidador-avatar">CU</div>
                     </div>
-
-
-
-
-
-
                 </header>
 
                 <div id="cuidador-content-area">
@@ -155,29 +187,177 @@ export function cuidadorView() {
 async function cargarContenidoDashboardCuidador() {
     const session = obtenerSesionActiva();
     const emailCuidador = session?.email || '';
+    const nombreCuidador = session?.nombre || session?.email || 'Cuidador';
     const pacientes = await obtenerPacientes('cuidador', emailCuidador);
 
+    // === HEADER DINÁMICO ===
+    const headerNombre = document.getElementById('header-cuidador-nombre');
+    if (headerNombre) headerNombre.textContent = `Hola, ${nombreCuidador}`;
+
+    const headerFecha = document.getElementById('header-cuidador-fecha');
+    if (headerFecha) {
+        const ahora = new Date();
+        const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        headerFecha.textContent = ahora.toLocaleDateString('es-ES', opciones);
+    }
+
+    const avatar = document.getElementById('header-cuidador-avatar');
+    if (avatar) {
+        const iniciales = nombreCuidador.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        avatar.textContent = iniciales || 'CU';
+    }
+
+    // === HERO Y LISTA DE PACIENTES ===
     const heroTitle = document.getElementById('caregiver-hero-title');
     const heroDescription = document.getElementById('caregiver-hero-description');
     const nextTurn = document.getElementById('caregiver-next-turn');
     const status = document.getElementById('caregiver-status');
     const summaryContainer = document.getElementById('caregiver-dashboard-summary');
+    const kpiRow = document.getElementById('caregiver-kpi-row');
+        const checklistList = document.getElementById('caregiver-checklist-list');
+    const medsProgress = document.getElementById('caregiver-meds-progress');
+    const medsLabel = document.getElementById('caregiver-meds-label');
+    const medsSubtitle = document.getElementById('caregiver-meds-subtitle');
+    const citasContent = document.getElementById('caregiver-next-citas-content');
+
+        // Poblar el select de "Registrar Medicamento" y activar el boton
+    populateRegisterMedsSelect(pacientes);
+    initDashboardMedsRedirect();
 
     if (pacientes.length) {
         const pacientePrincipal = pacientes[0];
+
+        // Hero
         if (heroTitle) heroTitle.textContent = `Acompañas a ${pacientePrincipal.nombre || 'tu paciente'} con calma y seguimiento`;
-        if (heroDescription) heroDescription.textContent = 'Los pacientes asignados a tu perfil se cargan directamente desde la base de datos del backend.';
+        if (heroDescription) heroDescription.textContent = `Tienes ${pacientes.length} paciente${pacientes.length > 1 ? 's' : ''} bajo tu cuidado. Los datos se cargan desde el sistema.`;
         if (nextTurn) nextTurn.textContent = pacientePrincipal.direccion ? `Revisión · ${pacientePrincipal.direccion}` : 'Revisión programada';
         if (status) status.textContent = pacientePrincipal.profesional_nombre ? `Con ${pacientePrincipal.profesional_nombre}` : 'Esperando profesional';
+
+        // Lista resumen de pacientes
         if (summaryContainer) {
             summaryContainer.innerHTML = `
                 <h3>Pacientes bajo tu cuidado</h3>
                 <ul class="caregiver-patient-list">
-                    ${pacientes.map((paciente) => `<li><strong>${paciente.nombre || 'Paciente sin nombre'}</strong>${paciente.profesional_nombre ? ` · Médico: ${paciente.profesional_nombre}` : ''}</li>`).join('')}
+                    ${pacientes.map((paciente) => `<li><strong>${paciente.nombre || 'Paciente sin nombre'}</strong>${paciente.profesional_nombre ? ` · Médico: ${paciente.profesional_nombre}` : ''}${paciente.nivel_alerta ? ` · Alerta: ${paciente.nivel_alerta}` : ''}</li>`).join('')}
                 </ul>
             `;
         }
+
+        // === Cargar medicamentos, citas y bitácora de TODOS los pacientes ===
+        const todosLosMeds = [];
+        const todasLasCitas = [];
+        const todasLasBitacoras = [];
+
+        for (const paciente of pacientes) {
+            const medicamentos = await obtenerMedicamentosPaciente(paciente.id);
+            medicamentos.forEach(m => m._pacienteNombre = paciente.nombre);
+            todosLosMeds.push(...medicamentos);
+
+            const citas = await obtenerCitasPaciente(paciente.id);
+            citas.forEach(c => c._pacienteNombre = paciente.nombre);
+            todasLasCitas.push(...citas);
+
+            const registros = await obtenerBitacoraRegistros(paciente.id);
+            registros.forEach(r => r._pacienteNombre = paciente.nombre);
+            todasLasBitacoras.push(...registros);
+        }
+
+                // === KPIs dinámicos ===
+        if (kpiRow) {
+            const totalMeds = todosLosMeds.length;
+            const citasHoy = todasLasCitas.filter(c => {
+                const fecha = new Date(c.fecha_hora);
+                const hoy = new Date();
+                return fecha.toDateString() === hoy.toDateString();
+            }).length;
+            const totalRegistros = todasLasBitacoras.length;
+
+                                                kpiRow.innerHTML = `
+                <div class="kpi-card kpi-clickable" data-tipo="pacientes" title="Click para ver detalle"><i class="ti ti-users kpi-icon"></i><span class="kpi-value">${pacientes.length}</span><span class="kpi-label">Pacientes</span></div>
+                <div class="kpi-card kpi-clickable" data-tipo="medicamentos" title="Click para ver detalle"><i class="ti ti-pill kpi-icon"></i><span class="kpi-value">${totalMeds}</span><span class="kpi-label">Medicamentos</span></div>
+                <div class="kpi-card kpi-clickable" data-tipo="citas" title="Click para ver detalle"><i class="ti ti-calendar-event kpi-icon"></i><span class="kpi-value">${citasHoy}</span><span class="kpi-label">Citas hoy</span></div>
+                <div class="kpi-card kpi-clickable" data-tipo="registros" title="Click para ver detalle"><i class="ti ti-notes kpi-icon"></i><span class="kpi-value">${totalRegistros}</span><span class="kpi-label">Registros</span></div>
+            `;
+        }
+
+        // Inicializar eventos click en los KPIs
+        initKpiClickEvents(pacientes, todosLosMeds, todasLasCitas, todasLasBitacoras);
+
+        // === Checklist dinámico ===
+        if (checklistList) {
+            const items = [];
+            if (pacientes.length > 0) items.push(`<li><span>✓</span>${pacientes.length} paciente(s) asignado(s)</li>`);
+            if (todosLosMeds.length > 0) items.push(`<li><span>✓</span>${todosLosMeds.length} medicamento(s) registrado(s)</li>`);
+            if (todasLasCitas.length > 0) items.push(`<li><span>✓</span>${todasLasCitas.length} cita(s) programada(s)</li>`);
+            if (todasLasBitacoras.length > 0) items.push(`<li><span>✓</span>${todasLasBitacoras.length} registro(s) de bitácora</li>`);
+            items.push('<li><span>&#10003;</span>Revisa hidratacion, rutina y cambios en respiracion o energia</li>');
+            checklistList.innerHTML = items.join('');
+        }
+
+                                // === Graficos de bitacora seleccionable por paciente y plantilla ===
+        initBitacoraGraficos(pacientes);
+
+        // === Barra de progreso de medicamentos ===
+        // === Barra de progreso de medicamentos ===
+        if (todosLosMeds.length > 0 && medsProgress && medsLabel && medsSubtitle) {
+            const activos = todosLosMeds.filter(m => m.estado === 'En tratamiento' || !m.estado);
+            const pct = Math.min((activos.length / todosLosMeds.length) * 100, 100);
+
+            medsProgress.style.width = `${pct}%`;
+            medsLabel.textContent = `${activos.length} de ${todosLosMeds.length} en tratamiento activo`;
+            medsSubtitle.textContent = `${activos.length} medicamento(s) activo(s) de ${pacientes.length} paciente(s)`;
+        } else if (medsLabel) {
+            medsLabel.textContent = 'Sin medicamentos registrados';
+            if (medsSubtitle) medsSubtitle.textContent = 'Registra medicacion desde la seccion Medicamentos';
+        }
+
+                // === Próximas citas ===
+        if (citasContent) {
+            const ahora = new Date();
+            const proximas = todasLasCitas
+                .filter(c => new Date(c.fecha_hora) > ahora)
+                .sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora))
+                .slice(0, 3);
+
+            if (proximas.length > 0) {
+                citasContent.innerHTML = proximas.map(c => `
+                    <div style="margin-bottom:10px; padding:8px 0; border-bottom:1px solid #e5e7eb;">
+                        <strong style="color:#1f2937;">${c._pacienteNombre || 'Paciente'}</strong>
+                        <p style="font-size:0.85rem; color:#6b7280; margin:2px 0;">
+                            ${new Date(c.fecha_hora).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' })} ·
+                            ${new Date(c.fecha_hora).toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' })}
+                        </p>
+                        <p style="font-size:0.8rem; color:#9ca3af;">${c.motivo || c.estado || 'Sin detalles'}</p>
+                    </div>
+                `).join('');
+            } else {
+                citasContent.innerHTML = '<p style="color: #5f6e6b; line-height: 1.6;">No hay próximas citas programadas.</p>';
+            }
+        }
+
+        // === Último registro de bitácora (reemplaza "Enfoque del día") ===
+        const enfoqueContent = document.getElementById('caregiver-enfoque-content');
+        if (enfoqueContent && todasLasBitacoras.length > 0) {
+            const ultimoRegistro = todasLasBitacoras.sort((a, b) => new Date(b.fecha_registro) - new Date(a.fecha_registro))[0];
+            const fecha = new Date(ultimoRegistro.fecha_registro).toLocaleDateString('es-ES', { day:'2-digit', month:'long', hour:'2-digit', minute:'2-digit' });
+
+            let notasHtml = '';
+            if (ultimoRegistro.notas) {
+                notasHtml = `<p style="color:#5f6e6b; line-height:1.6; margin-top:8px; font-size:0.9rem;">"${ultimoRegistro.notas}"</p>`;
+            }
+
+            enfoqueContent.innerHTML = `
+                <p style="color:#6a7a77; font-size:0.82rem; margin-bottom:4px;">
+                    ${ultimoRegistro._pacienteNombre || 'Paciente'} · ${fecha}
+                </p>
+                ${notasHtml || '<p style="color:#5f6e6b; line-height:1.6;">Sin notas adicionales en el último registro.</p>'}
+            `;
+        } else if (enfoqueContent) {
+            enfoqueContent.innerHTML = '<p style="color: #5f6e6b; line-height: 1.6;">Completa registros en la bitácora para verlos reflejados aquí.</p>';
+        }
+
     } else {
+        // Sin pacientes
         if (heroTitle) heroTitle.textContent = 'Aún no tienes pacientes asignados';
         if (heroDescription) heroDescription.textContent = 'Cuando un paciente sea creado y vinculado a tu perfil, aparecerá aquí con su información y seguimiento.';
         if (nextTurn) nextTurn.textContent = 'Sin pacientes aún';
@@ -188,6 +368,363 @@ async function cargarContenidoDashboardCuidador() {
                 <p style="color:var(--text-muted); margin-top:8px;">Aún no hay pacientes relacionados con tu cuenta. El contenido aparecerá automáticamente cuando el backend registre uno.</p>
             `;
         }
+        if (kpiRow) {
+                                                                                                kpiRow.innerHTML = `
+                <div class="kpi-card kpi-clickable" data-tipo="pacientes" title="Click para ver detalle"><i class="ti ti-users kpi-icon"></i><span class="kpi-value">0</span><span class="kpi-label">Pacientes</span></div>
+                <div class="kpi-card kpi-clickable" data-tipo="medicamentos" title="Click para ver detalle"><i class="ti ti-pill kpi-icon"></i><span class="kpi-value">0</span><span class="kpi-label">Medicamentos</span></div>
+                <div class="kpi-card kpi-clickable" data-tipo="citas" title="Click para ver detalle"><i class="ti ti-calendar-event kpi-icon"></i><span class="kpi-value">0</span><span class="kpi-label">Citas hoy</span></div>
+                <div class="kpi-card kpi-clickable" data-tipo="registros" title="Click para ver detalle"><i class="ti ti-notes kpi-icon"></i><span class="kpi-value">0</span><span class="kpi-label">Registros</span></div>
+            `;
+        }
+                if (checklistList) {
+            checklistList.innerHTML = '<li><span>✓</span>Esperando asignación de pacientes...</li>';
+        }
+
+        // Inicializar eventos click en los KPIs (aunque esten vacios)
+        initKpiClickEvents(pacientes, [], [], []);
+
+                const vitalsTableEmpty = document.getElementById('caregiver-vitals-table-container');
+                if (vitalsTableEmpty) {
+                    vitalsTableEmpty.innerHTML = '<p style="color:var(--text-muted); padding:8px 0;">Sin pacientes asignados. Los datos apareceran cuando haya pacientes vinculados.</p>';
+                }
+                if (medsLabel) medsLabel.textContent = 'Sin pacientes asignados';
+        if (citasContent) citasContent.innerHTML = '<p style="color: #5f6e6b; line-height: 1.6;">Sin pacientes asignados.</p>';
+        const enfoqueEmpty = document.getElementById('caregiver-enfoque-content');
+        if (enfoqueEmpty) enfoqueEmpty.innerHTML = '<p style="color: #5f6e6b; line-height: 1.6;">Esperando datos del paciente...</p>';
+    }
+}
+
+// === KPIs interactivos: abrir modal con detalle al hacer click ===
+function initKpiClickEvents(pacientes, todosLosMeds, todasLasCitas, todasLasBitacoras) {
+    const kpiRow = document.getElementById('caregiver-kpi-row');
+    if (!kpiRow) return;
+
+    kpiRow.querySelectorAll('.kpi-clickable').forEach(card => {
+        card.addEventListener('click', function() {
+            const tipo = this.dataset.tipo;
+            let modalContent = '';
+
+            switch (tipo) {
+                case 'pacientes': {
+                    if (!pacientes || pacientes.length === 0) {
+                        modalContent = '<div class="card fade-in"><h3>Pacientes</h3><p style="color:var(--text-muted);">No hay pacientes registrados.</p></div>';
+                        break;
+                    }
+                    const listItems = pacientes.map(p =>
+                        `<li style="padding:8px 0; border-bottom:1px solid #f3f4f6; display:flex; justify-content:space-between; align-items:center;">
+                            <span><strong>${p.nombre || 'Sin nombre'}</strong>${p.profesional_nombre ? '<br><small style="color:#6b7280;">Medico: ' + p.profesional_nombre + '</small>' : ''}</span>
+                            <span style="font-size:0.75rem; padding:2px 8px; border-radius:20px; background:${p.nivel_alerta && p.nivel_alerta.toLowerCase() !== 'bajo' && p.nivel_alerta.toLowerCase() !== 'normal' ? '#fef2f2; color:#991b1b;' : '#f0fdf4; color:#15803d;'};}">${p.nivel_alerta || 'Normal'}</span>
+                        </li>`
+                    ).join('');
+                    modalContent = `<div class="card fade-in"><h3>Pacientes (${pacientes.length})</h3><ul style="list-style:none; padding:0; margin:0;">${listItems}</ul></div>`;
+                    break;
+                }
+                case 'medicamentos': {
+                    if (!todosLosMeds || todosLosMeds.length === 0) {
+                        modalContent = '<div class="card fade-in"><h3>Medicamentos</h3><p style="color:var(--text-muted);">No hay medicamentos registrados.</p></div>';
+                        break;
+                    }
+                    const medItems = todosLosMeds.map(m =>
+                        `<div style="padding:8px 0; border-bottom:1px solid #f3f4f6;">
+                            <strong>${m.nombre || m.nombre_medicamento || 'Medicamento'}</strong>
+                            <span style="display:block; font-size:0.85rem; color:#6b7280;">${m._pacienteNombre || 'Paciente'} · Dosis: ${m.dosis} · ${m.frecuencia}</span>
+                            <span style="font-size:0.75rem; color:${m.estado === 'En tratamiento' ? '#15803d' : m.estado === 'Suspendido' ? '#991b1b' : '#6b7280'};">${m.estado || 'En tratamiento'}</span>
+                        </div>`
+                    ).join('');
+                    modalContent = `<div class="card fade-in"><h3>Medicamentos (${todosLosMeds.length})</h3>${medItems}</div>`;
+                    break;
+                }
+                case 'citas': {
+                    if (!todasLasCitas || todasLasCitas.length === 0) {
+                        modalContent = '<div class="card fade-in"><h3>Citas hoy</h3><p style="color:var(--text-muted);">No hay citas programadas para hoy.</p></div>';
+                        break;
+                    }
+                    const hoy = new Date();
+                    const citasHoy = todasLasCitas.filter(c => {
+                        const fecha = new Date(c.fecha_hora);
+                        return fecha.toDateString() === hoy.toDateString();
+                    });
+                    if (citasHoy.length === 0) {
+                        modalContent = '<div class="card fade-in"><h3>Citas hoy</h3><p style="color:var(--text-muted);">No hay citas programadas para hoy.</p></div>';
+                        break;
+                    }
+                    const citaItems = citasHoy.map(c =>
+                        `<div style="padding:8px 0; border-bottom:1px solid #f3f4f6;">
+                            <strong>${c._pacienteNombre || 'Paciente'}</strong>
+                            <span style="display:block; font-size:0.85rem; color:#6b7280;">
+                                ${new Date(c.fecha_hora).toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' })} 
+                                ${c.lugar ? '· ' + c.lugar : ''}
+                            </span>
+                            <span style="font-size:0.8rem; color:#9ca3af;">${c.motivo || 'Sin motivo'} · ${c.estado || 'Agendada'}</span>
+                        </div>`
+                    ).join('');
+                    modalContent = `<div class="card fade-in"><h3>Citas de hoy (${citasHoy.length})</h3>${citaItems}</div>`;
+                    break;
+                }
+                case 'registros': {
+                    if (!todasLasBitacoras || todasLasBitacoras.length === 0) {
+                        modalContent = '<div class="card fade-in"><h3>Registros de Bitacora</h3><p style="color:var(--text-muted);">No hay registros de bitacora.</p></div>';
+                        break;
+                    }
+                    const ultimosRegistros = [...todasLasBitacoras]
+                        .sort((a, b) => new Date(b.fecha_registro) - new Date(a.fecha_registro))
+                        .slice(0, 10);
+                    const regItems = ultimosRegistros.map(r =>
+                        `<div style="padding:8px 0; border-bottom:1px solid #f3f4f6;">
+                            <strong>${r._pacienteNombre || 'Paciente'}</strong>
+                            <span style="display:block; font-size:0.82rem; color:#6b7280;">
+                                ${new Date(r.fecha_registro).toLocaleString('es-ES', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })} 
+                                ${r.plantilla_nombre ? '· ' + r.plantilla_nombre : ''}
+                            </span>
+                            ${r.notas ? '<span style="font-size:0.8rem; color:#9ca3af; font-style:italic;">"' + r.notas.substring(0, 80) + (r.notas.length > 80 ? '..."' : '"') + '</span>' : ''}
+                        </div>`
+                    ).join('');
+                    modalContent = `<div class="card fade-in"><h3>Registros de Bitacora (${todasLasBitacoras.length})</h3><p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">Ultimos ${ultimosRegistros.length} registros</p>${regItems}</div>`;
+                    break;
+                }
+                default:
+                    modalContent = '<div class="card fade-in"><p>Informacion no disponible.</p></div>';
+            }
+
+            openFloatingModal(modalContent);
+        });
+    });
+}
+
+// === Graficos de Bitacora: seleccion por paciente y plantilla ===
+let bitacoraGraficosInstancias = [];
+
+function destruirGraficosPrevios() {
+    bitacoraGraficosInstancias.forEach(g => {
+        if (g && typeof g.destroy === 'function') g.destroy();
+    });
+    bitacoraGraficosInstancias = [];
+}
+
+async function initBitacoraGraficos(pacientes) {
+    const selectPaciente = document.getElementById('vitals-paciente-select');
+    const selectPlantilla = document.getElementById('vitals-plantilla-select');
+    const container = document.getElementById('caregiver-vitals-table-container');
+    if (!selectPaciente || !selectPlantilla || !container) return;
+
+    selectPaciente.innerHTML = pacientes.length
+        ? pacientes.map(p => `<option value="${p.id}">${p.nombre || 'Paciente'}</option>`).join('')
+        : '<option value="">Sin pacientes</option>';
+
+    let ultimoIdPaciente = null;
+
+    async function onPacienteChange() {
+        const idPaciente = Number(selectPaciente.value);
+        if (!idPaciente) {
+            selectPlantilla.innerHTML = '<option value="">Selecciona un paciente</option>';
+            container.innerHTML = '<p style="color:var(--text-muted); padding:8px 0;">Selecciona un paciente para cargar sus plantillas.</p>';
+            return;
+        }
+        if (idPaciente === ultimoIdPaciente) return;
+        ultimoIdPaciente = idPaciente;
+
+        const plantillas = await obtenerBitacoraPlantillas(idPaciente);
+        selectPlantilla.innerHTML = plantillas.length
+            ? '<option value="">Selecciona una plantilla</option>' + plantillas.map(p =>
+                `<option value="${p.id}">${p.nombre}</option>`
+              ).join('')
+            : '<option value="">Sin plantillas</option>';
+
+        container.innerHTML = '<p style="color:var(--text-muted); padding:8px 0;">Selecciona una plantilla para visualizar los graficos.</p>';
+    }
+
+    async function onPlantillaChange() {
+        const idPaciente = Number(selectPaciente.value);
+        const idPlantilla = Number(selectPlantilla.value);
+        if (!idPaciente || !idPlantilla) {
+            container.innerHTML = '<p style="color:var(--text-muted); padding:8px 0;">Selecciona paciente y plantilla para ver los graficos.</p>';
+            return;
+        }
+
+        const registros = await obtenerBitacoraRegistros(idPaciente);
+        // El backend devuelve el id de plantilla como 'plantilla_id'
+        const filtrados = registros.filter(r => {
+            const pid = r.plantilla_id || r.id_plantilla;
+            return pid === idPlantilla;
+        });
+
+        if (filtrados.length === 0) {
+            container.innerHTML = '<p style="color:var(--text-muted); padding:8px 0;">No hay registros con esta plantilla. Completa registros en la Bitacora Diaria.</p>';
+            return;
+        }
+
+        const plantillas = await obtenerBitacoraPlantillas(idPaciente);
+        const plantilla = plantillas.find(p => p.id === idPlantilla);
+        const campos = plantilla ? plantilla.campos : [];
+        const camposNumericos = campos.filter(c => c.type === 'number');
+        const camposTexto = campos.filter(c => c.type !== 'number');
+
+        if (camposNumericos.length === 0 && camposTexto.length === 0) {
+            container.innerHTML = '<p style="color:var(--text-muted); padding:8px 0;">La plantilla no tiene campos definidos.</p>';
+            return;
+        }
+
+        const ordenados = filtrados.sort((a, b) => new Date(a.fecha_registro) - new Date(b.fecha_registro));
+        const labels = ordenados.map(r => {
+            const d = new Date(r.fecha_registro);
+            return d.toLocaleDateString('es-ES', { day:'2-digit', month:'short' }) + ' ' + d.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
+        });
+
+        destruirGraficosPrevios();
+
+        // Construir el HTML con contenedores para graficos
+        let html = '<div style="margin-bottom:12px;">';
+        html += `<p style="font-size:0.85rem; color:var(--text-muted);">Mostrando ${ordenados.length} registro(s) de la plantilla "<strong>${plantilla.nombre}</strong>"</p>`;
+        html += '</div>';
+
+        // Graficos para campos numericos (lineas)
+        camposNumericos.forEach((campo, idx) => {
+            const valores = ordenados.map(r => {
+                const v = parseFloat((r.valores && r.valores[campo.label]) || '');
+                return isNaN(v) ? null : v;
+            }).filter(v => v !== null);
+
+            if (valores.length === 0) return;
+
+            const chartId = 'bitacora-chart-num-' + idx;
+            html += `<div style="margin-bottom:24px;">
+                <h4 style="font-size:0.9rem; margin-bottom:6px; color:#1f2937;">${campo.label}</h4>
+                <div style="position:relative; height:200px; width:100%;">
+                    <canvas id="${chartId}"></canvas>
+                </div>
+            </div>`;
+            html += '</div>';
+        });
+
+        // Tabla compacta para campos de texto (si hay)
+        if (camposTexto.length > 0) {
+            html += '<div style="margin-top:16px;"><h4 style="font-size:0.9rem; margin-bottom:6px; color:#1f2937;">Campos de texto / notas</h4>';
+            html += '<table style="width:100%; border-collapse:collapse; font-size:0.82rem;">';
+            html += '<thead><tr style="background:#f3f4f6;">';
+            html += '<th style="padding:6px 8px; text-align:left; border-bottom:2px solid #e5e7eb;">Fecha</th>';
+            camposTexto.forEach(c => {
+                html += `<th style="padding:6px 8px; text-align:left; border-bottom:2px solid #e5e7eb;">${c.label}</th>`;
+            });
+            html += '<th style="padding:6px 8px; text-align:left; border-bottom:2px solid #e5e7eb;">Notas</th>';
+            html += '</tr></thead><tbody>';
+            ordenados.forEach(reg => {
+                const fecha = new Date(reg.fecha_registro).toLocaleString('es-ES', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+                html += '<tr style="border-bottom:1px solid #f3f4f6;">';
+                html += `<td style="padding:6px 8px; white-space:nowrap;">${fecha}</td>`;
+                camposTexto.forEach(c => {
+                    const val = (reg.valores && reg.valores[c.label]) || '-';
+                    html += `<td style="padding:6px 8px;">${val}</td>`;
+                });
+                html += `<td style="padding:6px 8px; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${reg.notas || '-'}</td>`;
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+        }
+
+        container.innerHTML = html;
+
+        // Renderizar los graficos despues de insertar el HTML
+        camposNumericos.forEach((campo, idx) => {
+            const chartId = 'bitacora-chart-num-' + idx;
+            const canvas = document.getElementById(chartId);
+            if (!canvas) return;
+
+            const valores = ordenados.map(r => {
+                const v = parseFloat((r.valores && r.valores[campo.label]) || '');
+                return isNaN(v) ? null : v;
+            });
+
+            const ctx = canvas.getContext('2d');
+            const grad = ctx.createLinearGradient(0, 0, 0, 200);
+            grad.addColorStop(0, 'rgba(210,150,127,0.25)');
+            grad.addColorStop(1, 'rgba(210,150,127,0.01)');
+
+            try {
+                const chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: campo.label,
+                            data: valores,
+                            borderColor: '#d2967f',
+                            backgroundColor: grad,
+                            borderWidth: 2,
+                            pointBackgroundColor: '#d2967f',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 1,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: '#1f2937',
+                                titleColor: '#fff',
+                                bodyColor: '#e5e7eb',
+                                cornerRadius: 8,
+                                padding: 10
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: { font: { size: 10 }, color: '#6b7280' }
+                            },
+                            y: {
+                                grid: { color: 'rgba(0,0,0,0.05)' },
+                                ticks: { font: { size: 10 }, color: '#6b7280' },
+                                beginAtZero: false
+                            }
+                        },
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                });
+                bitacoraGraficosInstancias.push(chart);
+            } catch (e) {
+                console.warn('Error creando grafico para', campo.label, e);
+            }
+        });
+    }
+
+    selectPaciente.addEventListener('change', onPacienteChange);
+    selectPlantilla.addEventListener('change', onPlantillaChange);
+
+    if (pacientes.length > 0) {
+        selectPaciente.value = pacientes[0].id;
+        await onPacienteChange();
+    }
+}
+
+function populateRegisterMedsSelect(pacientes) {
+    const select = document.getElementById('caregiver-register-paciente-select');
+    if (!select) return;
+    select.innerHTML = pacientes.length
+        ? pacientes.map(p => `<option value="${p.id}">${p.nombre || 'Paciente'}</option>`).join('')
+        : '<option value="">Sin pacientes</option>';
+}
+
+function initDashboardMedsRedirect() {
+    const btnIrARegistrar = document.getElementById('btn-ir-a-registrar-medicamento');
+    if (btnIrARegistrar) {
+        btnIrARegistrar.addEventListener('click', () => {
+            const select = document.getElementById('caregiver-register-paciente-select');
+            if (!select || !select.value) {
+                alert('Selecciona un paciente primero desde el dashboard.');
+                return;
+            }
+            const menuItem = document.querySelector('.sidebar-cuidador .menu-item[data-view="medicamentos"]');
+            if (menuItem) menuItem.click();
+        });
     }
 }
 
@@ -206,7 +743,7 @@ function initCuidadorEvents(baseHtml) {
             const vista = item.getAttribute('data-view');
             if (vista === 'dashboard') {
                 contentArea.innerHTML = baseHtml;
-                initActionButtons();
+                cargarContenidoDashboardCuidador();
             } else if (vista === 'pacientes') {
                 contentArea.innerHTML = '<div class="card fade-in" style="text-align:center;"><p style="color:var(--text-muted); font-weight:600;">Cargando pacientes...</p></div>';
                 await renderPacientesSection(contentArea);
@@ -229,7 +766,6 @@ function initCuidadorEvents(baseHtml) {
         });
     });
 
-    initActionButtons();
     initLogoutEvents();
 }
 
@@ -296,7 +832,7 @@ function openFloatingModal(contentHtml) {
     const modalHtml = `
         <div id="floating-modal-root" class="modal-overlay">
             <div class="modal-dialog">
-                <button type="button" class="modal-close-btn" aria-label="Cerrar">&times;</button>
+                <button type="button" class="modal-close-btn" aria-label="Cerrar">X</button>
                 <div id="floating-modal-content" class="modal-content">${contentHtml}</div>
             </div>
         </div>
@@ -319,13 +855,14 @@ function openPacienteDetalleModal(idPaciente, rol = 'cuidador') {
 }
 
 function openCrearPacienteModal(profesionales, emailCuidador) {
-    const profesionalesOptions = profesionales.map((prof) => `
-        <option value="${prof.id}">${prof.nombre} (${prof.email || prof.especialidad || 'Sin email'})</option>
+    const profesionalesOptionsTodas = profesionales.map((prof) => `
+        <option value="${prof.id}" data-email="${prof.email || ''}" data-nombre="${prof.nombre}">${prof.nombre} (${prof.email || prof.especialidad || 'Sin email'})</option>
     `).join('');
 
     const formHtml = `
         <div class="card fade-in">
             <h3>Crear paciente</h3>
+            <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">Al seleccionar un médico, se le enviará una solicitud de vinculación que deberá aceptar para asociar al paciente.</p>
             <form id="crear-paciente-form" class="patient-form">
                 <div class="form-group"><label>Nombre</label><input type="text" name="nombre" required></div>
                 <div class="form-group"><label>Fecha de nacimiento</label><input type="date" name="fecha_nacimiento" required></div>
@@ -336,9 +873,9 @@ function openCrearPacienteModal(profesionales, emailCuidador) {
                 <div class="form-group"><label>Nivel alerta</label><input type="text" name="nivel_alerta" placeholder="Opcional"></div>
                 <div class="form-group"><label>Estado general</label><input type="text" name="estado_general" placeholder="Opcional"></div>
                 <div class="form-group"><label>Ubicación</label><input type="text" name="ubicacion" placeholder="Opcional"></div>
-                <div class="form-group"><label>Médico asignado</label><select name="id_profesional">
-                    <option value="">Sin asignar</option>
-                    ${profesionalesOptions}
+                <div class="form-group"><label>Solicitar vinculación con médico</label><select name="id_profesional">
+                    <option value="">Sin médico (solo cuidador)</option>
+                    ${profesionalesOptionsTodas}
                 </select></div>
                 <div class="form-actions">
                     <button type="button" id="cancelar-crear-paciente" class="btn btn-secondary">Cancelar</button>
@@ -359,6 +896,16 @@ function openCrearPacienteModal(profesionales, emailCuidador) {
     form?.addEventListener('submit', async (event) => {
         event.preventDefault();
         const formData = new FormData(form);
+        const idProfesional = formData.get('id_profesional') ? Number(formData.get('id_profesional')) : null;
+
+        // Buscar el email del profesional seleccionado
+        const selectProf = form.querySelector('select[name="id_profesional"]');
+        let emailProfesional = '';
+        if (idProfesional && selectProf) {
+            const option = selectProf.querySelector(`option[value="${idProfesional}"]`);
+            emailProfesional = option?.dataset?.email || '';
+        }
+
         const paciente = {
             nombre: String(formData.get('nombre') || '').trim(),
             fecha_nacimiento: String(formData.get('fecha_nacimiento') || '').trim(),
@@ -370,7 +917,7 @@ function openCrearPacienteModal(profesionales, emailCuidador) {
             estado_general: String(formData.get('estado_general') || '').trim(),
             ubicacion: String(formData.get('ubicacion') || '').trim(),
             email_cuidador: emailCuidador,
-            id_profesional: formData.get('id_profesional') ? Number(formData.get('id_profesional')) : null
+            id_profesional: idProfesional
         };
 
         const errorDiv = modalContent.querySelector('#paciente-form-error');
@@ -378,6 +925,7 @@ function openCrearPacienteModal(profesionales, emailCuidador) {
         if (errorDiv) errorDiv.style.display = 'none';
         if (successDiv) successDiv.style.display = 'none';
 
+        // 1. Crear paciente
         const respuesta = await crearPaciente(paciente);
         if (!respuesta.success) {
             if (errorDiv) {
@@ -387,15 +935,40 @@ function openCrearPacienteModal(profesionales, emailCuidador) {
             return;
         }
 
+        // 2. Si se seleccionó un médico, enviar solicitud de vinculación
+        if (idProfesional && emailProfesional && respuesta.paciente?.id) {
+            const solicitud = {
+                id_paciente: respuesta.paciente.id,
+                email_solicitante: emailCuidador,
+                rol_solicitante: 'cuidador',
+                email_destinatario: emailProfesional,
+                mensaje: `El cuidador solicita vincular al paciente "${paciente.nombre}" a su cuenta profesional.`
+            };
+            const respSolicitud = await crearSolicitudVinculacion(solicitud);
+            if (!respSolicitud.success) {
+                if (errorDiv) {
+                    errorDiv.textContent = 'Paciente creado, pero no se pudo enviar la solicitud al médico. ' + (respSolicitud.message || '');
+                    errorDiv.style.display = 'block';
+                }
+                return;
+            }
+        }
+
+        // 3. Mostrar mensaje de éxito según el caso
         if (successDiv) {
-            successDiv.textContent = 'Paciente creado con éxito.';
+            const msj = idProfesional
+                ? `Paciente creado con éxito. Se ha enviado una solicitud de vinculación al médico.`
+                : 'Paciente creado con éxito.';
+            successDiv.textContent = msj;
             successDiv.style.display = 'block';
         }
 
         if (form) form.reset();
-        closeFloatingModal();
-        const pageContainer = document.getElementById('cuidador-content-area');
-        if (pageContainer) await renderPacientesSection(pageContainer);
+        setTimeout(() => {
+            closeFloatingModal();
+            const pageContainer = document.getElementById('cuidador-content-area');
+            if (pageContainer) renderPacientesSection(pageContainer);
+        }, 800);
     });
 }
 
@@ -730,7 +1303,7 @@ async function renderPacientesSection(container) {
               <button class="btn btn-secondary btn-ver-paciente" data-paciente-id="${paciente.id}">Ver / Editar</button>
             </div>
           `).join('')
-        : '<div class="card empty-state-card"><div class="empty-state-icon">🤝</div><h4>Aún no tienes pacientes asignados</h4><p>Cuando un paciente sea creado y vinculado a tu perfil, aparecerá aquí con su información de seguimiento.</p></div>';
+        : '<div class="card empty-state-card"><div class="empty-state-icon"><i class="ti ti-users"></i></div><h4>Aun no tienes pacientes asignados</h4><p>Cuando un paciente sea creado y vinculado a tu perfil, aparecera aqui con su informacion de seguimiento.</p></div>';
 
     container.innerHTML = `
         <div class="card fade-in section-hero-card" style="margin-bottom: 18px;">
@@ -1119,6 +1692,83 @@ function renderCrearPacienteForm(container, profesionales, emailCuidador) {
     });
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 async function renderPacienteDetalle(container, idPaciente, rol) {
     const paciente = await obtenerPacienteDetalle(idPaciente);
     if (!paciente) {
@@ -1126,9 +1776,30 @@ async function renderPacienteDetalle(container, idPaciente, rol) {
         return;
     }
 
+    const session = obtenerSesionActiva();
+    const emailCuidador = session?.email || '';
+    const profesionales = await obtenerProfesionales();
+
+    // Excluir al profesional ya asignado de las opciones
+    const profesionalesOptions = profesionales
+        .filter(p => p.email !== paciente.profesional_email)
+        .map((prof) => `
+            <option value="${prof.id}" data-email="${prof.email || ''}">${prof.nombre} (${prof.email || prof.especialidad || 'Sin email'})</option>
+        `).join('');
+
     const detalleHtml = `
         <div class="card fade-in">
             <h3>Detalle del paciente</h3>
+            ${!paciente.profesional_nombre ? `
+            <div style="background:#fef3c7; border:1px solid #f59e0b; border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+                <strong style="color:#92400e;">Pendiente de médico</strong>
+                <p style="font-size:0.85rem; color:#78350f; margin-top:4px;">Este paciente no tiene un médico asignado. Puedes solicitar vinculación con un profesional desde este formulario.</p>
+            </div>
+            ` : `
+            <div style="background:#f0fdf4; border:1px solid #22c55e; border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+                <strong style="color:#166534;">Médico asignado: ${paciente.profesional_nombre}</strong>
+            </div>
+            `}
             <form id="editar-paciente-form" class="patient-form">
                 <div class="form-group"><label>Nombre</label><input type="text" name="nombre" value="${paciente.nombre || ''}" required></div>
                 <div class="form-group"><label>Fecha de nacimiento</label><input type="date" name="fecha_nacimiento" value="${paciente.fecha_nacimiento || ''}" required></div>
@@ -1141,7 +1812,16 @@ async function renderPacienteDetalle(container, idPaciente, rol) {
                 <div class="form-group"><label>Nivel alerta</label><input type="text" name="nivel_alerta" value="${paciente.nivel_alerta || ''}"></div>
                 <div class="form-group"><label>Estado general</label><input type="text" name="estado_general" value="${paciente.estado_general || ''}"></div>
                 <div class="form-group"><label>Ubicación</label><input type="text" name="ubicacion" value="${paciente.ubicacion || ''}"></div>
-                <div class="form-actions">
+                <div id="solicitud-medico-section" style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border-subtle);">
+                    <label style="font-weight:600; display:block; margin-bottom:8px;">${paciente.profesional_nombre ? 'Cambiar o solicitar nuevo médico' : 'Solicitar vinculación con médico'}</label>
+                    <select id="solicitar-profesional-select" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary);">
+                        <option value="">Selecciona un profesional</option>
+                        ${profesionalesOptions}
+                    </select>
+                    <button type="button" id="btn-enviar-solicitud-medico" class="btn btn-primary" style="margin-top:10px; width:100%;" disabled>Enviar solicitud de vinculación</button>
+                    <div id="solicitud-medico-msg" style="margin-top:8px; font-size:0.85rem; display:none;"></div>
+                </div>
+                <div class="form-actions" style="margin-top:16px;">
                     <button type="button" id="volver-paciente-lista" class="btn btn-secondary">Volver</button>
                     <button type="submit" class="btn btn-primary">Guardar cambios</button>
                 </div>
@@ -1152,6 +1832,61 @@ async function renderPacienteDetalle(container, idPaciente, rol) {
     `;
 
     container.innerHTML = detalleHtml;
+
+    // Lógica del botón de solicitud de vinculación
+    const solicitarSelect = document.getElementById('solicitar-profesional-select');
+    const btnSolicitar = document.getElementById('btn-enviar-solicitud-medico');
+    const solicitudMsg = document.getElementById('solicitud-medico-msg');
+
+    if (solicitarSelect && btnSolicitar) {
+        solicitarSelect.addEventListener('change', () => {
+            btnSolicitar.disabled = !solicitarSelect.value;
+        });
+
+        btnSolicitar.addEventListener('click', async () => {
+            const option = solicitarSelect.options[solicitarSelect.selectedIndex];
+            if (!option || !option.value) return;
+
+            const emailProfesional = option.dataset.email || '';
+            if (!emailProfesional) {
+                if (solicitudMsg) {
+                    solicitudMsg.textContent = 'El profesional seleccionado no tiene un email registrado.';
+                    solicitudMsg.style.color = '#ef4444';
+                    solicitudMsg.style.display = 'block';
+                }
+                return;
+            }
+
+            btnSolicitar.disabled = true;
+            btnSolicitar.textContent = 'Enviando...';
+
+            const solicitud = {
+                id_paciente: idPaciente,
+                email_solicitante: emailCuidador,
+                rol_solicitante: 'cuidador',
+                email_destinatario: emailProfesional,
+                mensaje: `El cuidador solicita vincular al paciente "${paciente.nombre}" a su cuenta profesional.`
+            };
+
+            const resp = await crearSolicitudVinculacion(solicitud);
+            if (resp.success) {
+                if (solicitudMsg) {
+                    solicitudMsg.textContent = '✅ Solicitud de vinculación enviada al médico. Debe aceptarla para completar la relación.';
+                    solicitudMsg.style.color = '#16a34a';
+                    solicitudMsg.style.display = 'block';
+                }
+                btnSolicitar.textContent = 'Solicitud enviada';
+            } else {
+                if (solicitudMsg) {
+                    solicitudMsg.textContent = '❌ ' + (resp.message || 'No se pudo enviar la solicitud.');
+                    solicitudMsg.style.color = '#ef4444';
+                    solicitudMsg.style.display = 'block';
+                }
+                btnSolicitar.disabled = false;
+                btnSolicitar.textContent = 'Enviar solicitud de vinculación';
+            }
+        });
+    }
 
     document.getElementById('volver-paciente-lista')?.addEventListener('click', () => {
         if (container.closest('#floating-modal-root')) {
@@ -1165,7 +1900,7 @@ async function renderPacienteDetalle(container, idPaciente, rol) {
     form?.addEventListener('submit', async (event) => {
         event.preventDefault();
         const formData = new FormData(form);
-        const datosActualizados = {
+                const datosActualizados = {
             nombre: String(formData.get('nombre') || '').trim(),
             fecha_nacimiento: String(formData.get('fecha_nacimiento') || '').trim(),
             direccion: String(formData.get('direccion') || '').trim(),
@@ -1195,331 +1930,5 @@ async function renderPacienteDetalle(container, idPaciente, rol) {
             successDiv.textContent = 'Paciente actualizado con éxito.';
             successDiv.style.display = 'block';
         }
-    });
-}
-
-function limpiarSesionYRedirigir() {
-    cerrarSesion();
-    window.location.hash = '#/login';
-}
-
-function initActionButtons() {
-    const btnMed = document.getElementById('btn-med');
-    const btnAlerta = document.getElementById('btn-alerta');
-
-    if (btnMed) {
-        btnMed.addEventListener('click', () => {
-            const progressBar = document.querySelector('.progress-bar');
-            const progressLabel = document.querySelector('.progress-labels span');
-            if (progressBar) progressBar.style.width = '66%';
-            if (progressLabel) progressLabel.textContent = '2 de 3 dosis entregadas';
-
-            openFloatingModal(`
-                <div class="card fade-in">
-                    <h3>Medicamento registrado</h3>
-                    <p>La dosis de la mañana fue marcada como suministrada.</p>
-                    <div class="form-actions">
-                        <button type="button" id="close-action-modal" class="btn btn-primary">Aceptar</button>
-                    </div>
-                </div>
-            `);
-            document.getElementById('close-action-modal')?.addEventListener('click', closeFloatingModal);
-        });
-    }
-
-    if (btnAlerta) {
-        btnAlerta.addEventListener('click', () => {
-            openFloatingModal(`
-                <div class="card fade-in">
-                    <h3>Alerta enviada</h3>
-                    <p>La notificación fue enviada a los familiares y al equipo de soporte.</p>
-                    <div class="form-actions">
-                        <button type="button" id="close-alert-modal" class="btn btn-primary">Aceptar</button>
-                    </div>
-                </div>
-            `);
-            document.getElementById('close-alert-modal')?.addEventListener('click', closeFloatingModal);
-        });
-    }
-}
-
-async function renderBitacoraSection(container) {
-    const session = obtenerSesionActiva();
-    const emailCuidador = session?.email || '';
-    const pacientes = await obtenerPacientes('cuidador', emailCuidador);
-
-    if (!pacientes.length) {
-        container.innerHTML = '<div class="card fade-in"><p style="color:var(--text-muted);">No tienes pacientes asignados para registrar bitácora.</p></div>';
-        return;
-    }
-
-    const pacienteOptions = pacientes.map((paciente) => `
-        <option value="${paciente.id}">${paciente.nombre} - ${paciente.direccion || 'Sin dirección'}</option>
-    `).join('');
-
-    container.innerHTML = `
-        <div class="card fade-in" style="margin-bottom:18px;">
-            <div class="section-header">
-                <div>
-                    <h3>Bitácora diaria</h3>
-                    <p>Gestiona la plantilla de bitácora y registra datos clínicos frecuentes del paciente.</p>
-                </div>
-                <div class="form-group-inline">
-                    <label style="font-weight:600;">Paciente:</label>
-                    <select id="bitacora-paciente-select">${pacienteOptions}</select>
-                </div>
-            </div>
-        </div>
-        <div id="bitacora-detail-area"></div>
-    `;
-
-    const select = document.getElementById('bitacora-paciente-select');
-    if (!select) return;
-
-    select.addEventListener('change', async () => {
-        const idPaciente = Number(select.value);
-        await renderBitacoraDetail(container, idPaciente);
-    });
-
-    await renderBitacoraDetail(container, Number(select.value) || pacientes[0].id);
-}
-
-async function renderBitacoraDetail(container, idPaciente) {
-    const detailArea = document.getElementById('bitacora-detail-area');
-    if (!detailArea) return;
-
-    detailArea.innerHTML = '<div class="card fade-in" style="text-align:center;"><p style="color:var(--text-muted); font-weight:600;">Cargando bitácora del paciente...</p></div>';
-
-    const [plantillas, registros] = await Promise.all([
-        obtenerBitacoraPlantillas(idPaciente),
-        obtenerBitacoraRegistros(idPaciente)
-    ]);
-
-    const plantillasHtml = plantillas.length
-        ? plantillas.map((plantilla) => `
-            <li class="list-item plantilla-item" data-id="${plantilla.id}" data-name="${plantilla.nombre}">${plantilla.nombre} <span style="color:var(--text-muted); font-size:0.9rem;">(${new Date(plantilla.fecha_creacion).toLocaleDateString('es-ES')})</span></li>
-          `).join('')
-        : '<li style="color:var(--text-muted);">Aún no hay plantillas creadas.</li>';
-
-    const registrosHtml = registros.length
-        ? registros.map((registro) => `
-            <div class="registro-card">
-                <div class="registro-header">
-                    <div>
-                        <h4>${registro.plantilla_nombre || 'Registro sin plantilla'}</h4>
-                        <span>${new Date(registro.fecha_registro).toLocaleString('es-ES')}</span>
-                    </div>
-                </div>
-                <div class="registro-body">
-                    <div class="registro-grid">
-                        ${Object.entries(registro.valores || {}).map(([key, value]) => `
-                            <div class="registro-value"><strong>${key}</strong><span>${value}</span></div>
-                        `).join('')}
-                    </div>
-                    ${registro.notas ? `<p class="registro-notas"><strong>Notas:</strong> ${registro.notas}</p>` : ''}
-                </div>
-            </div>
-          `).join('')
-        : '<p style="color:var(--text-muted);">No hay registros diarios para este paciente.</p>';
-
-    detailArea.innerHTML = `
-        <div class="card fade-in" style="margin-bottom:18px;">
-            <div class="section-header">
-                <div>
-                    <h4>Plantilla de bitácora</h4>
-                    <p>Define los datos generales que deseas capturar cada vez que registras la bitácora.</p>
-                </div>
-                <button id="btn-crear-plantilla" class="btn btn-primary">Agregar Bitacora</button>
-            </div>
-            <ul class="plantilla-list" style="margin-top:14px; padding-left:18px;">${plantillasHtml}</ul>
-        </div>
-        <div id="plantilla-builder-area"></div>
-        <div id="registro-form-area" class="card fade-in" style="margin-bottom:18px;"></div>
-        <div class="card fade-in">
-            <h4>Registros diarios recientes</h4>
-            <div id="registro-list">${registrosHtml}</div>
-        </div>
-    `;
-
-    document.getElementById('btn-crear-plantilla')?.addEventListener('click', () => {
-        renderPlantillaBuilder(idPaciente, detailArea, container);
-    });
-
-    detailArea.querySelectorAll('.plantilla-item').forEach((item) => {
-        item.addEventListener('click', async () => {
-            const idPlantilla = Number(item.dataset.id);
-            const plantillaNombre = item.dataset.name;
-            await renderRegistroForm(detailArea, idPaciente, idPlantilla, plantillaNombre, container);
-        });
-    });
-}
-
-function renderPlantillaBuilder(idPaciente, detailArea, container) {
-    const builderHtml = `
-        <div class="card fade-in" style="margin-bottom:18px;">
-            <h4>Crear plantilla de bitácora</h4>
-            <form id="plantilla-builder-form" class="patient-form">
-                <div class="form-group"><label>Nombre de la plantilla</label><input type="text" name="nombre" required></div>
-                <div id="campos-dinamicos" class="form-group">
-                    <label>Campos de registro</label>
-                    <div class="dynamic-fields"></div>
-                    <button type="button" id="btn-agregar-campo" class="btn btn-secondary" style="margin-top:8px;">Agregar campo</button>
-                </div>
-                <div class="form-actions">
-                    <button type="button" id="cancelar-plantilla" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar plantilla</button>
-                </div>
-                <div id="plantilla-error" style="margin-top:10px; color:#ef4444; display:none;"></div>
-                <div id="plantilla-success" style="margin-top:10px; color:#2f855a; display:none;"></div>
-            </form>
-        </div>
-    `;
-
-    const builderArea = document.getElementById('plantilla-builder-area');
-    if (!builderArea) return;
-    builderArea.innerHTML = builderHtml;
-
-    const fieldsContainer = builderArea.querySelector('.dynamic-fields');
-    if (fieldsContainer) {
-        addDynamicField(fieldsContainer, 'Ritmo cardiaco', 'ritmo_cardiaco');
-        addDynamicField(fieldsContainer, 'Azúcar', 'azucar');
-        addDynamicField(fieldsContainer, 'Temperatura', 'temperatura');
-    }
-
-    document.getElementById('btn-agregar-campo')?.addEventListener('click', () => {
-        addDynamicField(fieldsContainer, '', 'campo_personalizado');
-    });
-
-    document.getElementById('cancelar-plantilla')?.addEventListener('click', () => {
-        builderArea.innerHTML = '';
-    });
-
-    const form = document.getElementById('plantilla-builder-form');
-    form?.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const nombre = String(form.nombre.value || '').trim();
-        const campos = Array.from(fieldsContainer.querySelectorAll('.dynamic-field')).map((field) => ({
-            label: String(field.querySelector('.campo-label')?.value || '').trim(),
-            key: String(field.querySelector('.campo-key')?.value || '').trim(),
-            type: String(field.querySelector('.campo-type')?.value || 'text').trim()
-        })).filter((item) => item.label && item.key);
-
-        const errorDiv = document.getElementById('plantilla-error');
-        const successDiv = document.getElementById('plantilla-success');
-        if (errorDiv) errorDiv.style.display = 'none';
-        if (successDiv) successDiv.style.display = 'none';
-
-        if (!nombre || !campos.length) {
-            if (errorDiv) {
-                errorDiv.textContent = 'Necesitas un nombre y al menos un campo válido.';
-                errorDiv.style.display = 'block';
-            }
-            return;
-        }
-
-        const respuesta = await crearBitacoraPlantilla(idPaciente, { nombre, campos });
-        if (!respuesta.success) {
-            if (errorDiv) {
-                errorDiv.textContent = respuesta.message || 'No se pudo guardar la plantilla.';
-                errorDiv.style.display = 'block';
-            }
-            return;
-        }
-
-        if (successDiv) {
-            successDiv.textContent = 'Plantilla guardada correctamente.';
-            successDiv.style.display = 'block';
-        }
-
-        await renderBitacoraDetail(container, idPaciente);
-        builderArea.innerHTML = '';
-    });
-}
-
-function addDynamicField(container, label = '', key = '') {
-    const fieldWrapper = document.createElement('div');
-    fieldWrapper.className = 'dynamic-field';
-    fieldWrapper.style.marginBottom = '10px';
-    fieldWrapper.innerHTML = `
-        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-start;">
-            <input type="text" class="campo-label" placeholder="Etiqueta" value="${label}">
-            <input type="text" class="campo-key" placeholder="Clave interna" value="${key}">
-            <select class="campo-type">
-                <option value="text">Texto</option>
-                <option value="number">Número</option>
-            </select>
-            <button type="button" class="btn btn-danger btn-remove-campo">Eliminar</button>
-        </div>
-    `;
-
-    container.appendChild(fieldWrapper);
-    fieldWrapper.querySelector('.btn-remove-campo')?.addEventListener('click', () => {
-        container.removeChild(fieldWrapper);
-    });
-}
-
-async function renderRegistroForm(detailArea, idPaciente, idPlantilla, plantillaNombre, container) {
-    const plantilla = await obtenerBitacoraPlantillas(idPaciente).then((plantillas) => plantillas.find((item) => item.id === idPlantilla));
-    if (!plantilla) {
-        detailArea.querySelector('#registro-form-area').innerHTML = '<div class="card fade-in"><p style="color:var(--text-muted);">Plantilla no encontrada.</p></div>';
-        return;
-    }
-
-    const fieldsHtml = plantilla.campos.map((campo) => `
-        <div class="form-group"><label>${campo.label}</label><input type="${campo.type || 'text'}" name="${campo.key}" required></div>
-    `).join('');
-
-    const registroHtml = `
-        <div class="card fade-in" style="margin-bottom:18px;">
-            <h4>Registro diario: ${plantillaNombre}</h4>
-            <form id="registro-form" class="patient-form">
-                ${fieldsHtml}
-                <div class="form-group"><label>Notas adicionales</label><textarea name="notas" rows="3"></textarea></div>
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Guardar registro</button>
-                </div>
-                <div id="registro-error" style="margin-top:10px; color:#ef4444; display:none;"></div>
-                <div id="registro-success" style="margin-top:10px; color:#2f855a; display:none;"></div>
-            </form>
-        </div>
-    `;
-
-    detailArea.querySelector('#registro-form-area').innerHTML = registroHtml;
-
-    const form = document.getElementById('registro-form');
-    form?.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const formData = new FormData(form);
-        const valores = {};
-        plantilla.campos.forEach((campo) => {
-            valores[campo.label] = String(formData.get(campo.key) || '').trim();
-        });
-
-        const registro = {
-            id_plantilla: idPlantilla,
-            valores,
-            notas: String(formData.get('notas') || '').trim()
-        };
-
-        const errorDiv = document.getElementById('registro-error');
-        const successDiv = document.getElementById('registro-success');
-        if (errorDiv) errorDiv.style.display = 'none';
-        if (successDiv) successDiv.style.display = 'none';
-
-        const respuesta = await crearBitacoraRegistro(idPaciente, registro);
-        if (!respuesta.success) {
-            if (errorDiv) {
-                errorDiv.textContent = respuesta.message || 'No se pudo guardar el registro.';
-                errorDiv.style.display = 'block';
-            }
-            return;
-        }
-
-        if (successDiv) {
-            successDiv.textContent = 'Registro diario guardado con éxito.';
-            successDiv.style.display = 'block';
-        }
-
-        await renderBitacoraDetail(container, idPaciente);
     });
 }

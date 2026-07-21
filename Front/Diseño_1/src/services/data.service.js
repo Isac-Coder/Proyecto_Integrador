@@ -280,3 +280,89 @@ export async function asignarPacienteProfesional(idPaciente, emailProfesional) {
         return { success: false, message: 'No se pudo asignar el paciente al profesional.' };
     }
 }
+
+export async function obtenerPacientesDisponibles() {
+    try {
+        const response = await fetch(`${API_URL}/data/pacientes?scope=disponibles`);
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'No se pudieron cargar los pacientes disponibles.');
+        }
+        return data.items || [];
+    } catch (error) {
+        console.error('Error al cargar pacientes disponibles:', error);
+        return [];
+    }
+}
+
+// ============================================================
+// SOLICITUDES DE VINCULACIÓN
+// ============================================================
+
+export async function crearSolicitudVinculacion(solicitud) {
+    try {
+        const response = await fetch(`${API_URL}/vinculacion/solicitudes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(solicitud)
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Error al crear solicitud de vinculación:', error);
+        return { success: false, message: 'No se pudo crear la solicitud de vinculación.' };
+    }
+}
+
+export async function obtenerSolicitudesPendientes(emailDestinatario) {
+    try {
+        const params = new URLSearchParams({ email_destinatario: emailDestinatario });
+        const response = await fetch(`${API_URL}/vinculacion/solicitudes/pendientes?${params.toString()}`);
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'No se pudieron cargar solicitudes pendientes.');
+        }
+        return data.items || [];
+    } catch (error) {
+        console.error('Error al cargar solicitudes pendientes:', error);
+        return [];
+    }
+}
+
+export async function obtenerSolicitudesEnviadas(emailSolicitante) {
+    try {
+        const params = new URLSearchParams({ email_solicitante: emailSolicitante });
+        const response = await fetch(`${API_URL}/vinculacion/solicitudes/enviadas?${params.toString()}`);
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'No se pudieron cargar solicitudes enviadas.');
+        }
+        return data.items || [];
+    } catch (error) {
+        console.error('Error al cargar solicitudes enviadas:', error);
+        return [];
+    }
+}
+
+export async function aceptarSolicitudVinculacion(idSolicitud) {
+    try {
+        const response = await fetch(`${API_URL}/vinculacion/solicitudes/${idSolicitud}/aceptar`, {
+            method: 'PUT'
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Error al aceptar solicitud de vinculación:', error);
+        return { success: false, message: 'No se pudo aceptar la solicitud de vinculación.' };
+    }
+}
+
+export async function rechazarSolicitudVinculacion(idSolicitud) {
+    try {
+        const response = await fetch(`${API_URL}/vinculacion/solicitudes/${idSolicitud}/rechazar`, {
+            method: 'PUT'
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Error al rechazar solicitud de vinculación:', error);
+        return { success: false, message: 'No se pudo rechazar la solicitud de vinculación.' };
+    }
+}

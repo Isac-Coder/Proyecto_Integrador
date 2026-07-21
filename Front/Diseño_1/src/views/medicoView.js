@@ -1,5 +1,5 @@
 // src/views/medicoView.js
-import { obtenerDatosSeccion, obtenerPacientes, asignarPacienteProfesional, obtenerPacienteDetalle, actualizarPaciente, obtenerCitasPaciente, obtenerBitacoraRegistros } from '../services/data.service.js';
+import { obtenerDatosSeccion, obtenerPacientes, asignarPacienteProfesional, obtenerPacienteDetalle, actualizarPaciente, obtenerCitasPaciente, obtenerBitacoraRegistros, obtenerSolicitudesPendientes, aceptarSolicitudVinculacion, rechazarSolicitudVinculacion, crearSolicitudVinculacion, obtenerPacientesDisponibles, obtenerProfesionales } from '../services/data.service.js';
 import { cerrarSesion, obtenerSesionActiva } from '../services/auth.services.js';
 
 export function profesionalView() {
@@ -19,8 +19,7 @@ export function profesionalView() {
     const fechaActual = obtenerFechaFormateada();
 
     const estructuraDashboardBase = `
-        <div class="dashboard-grid fade-in">
-            <section class="main-content-column">
+        <div class="dashboard-grid fade-in">v
                 <div class="card professional-hero-card">
                     <div>
                         <span class="professional-pill">Panel clínico premium</span>
