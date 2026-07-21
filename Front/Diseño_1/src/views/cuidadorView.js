@@ -1922,6 +1922,50 @@ function renderCrearPacienteForm(container, profesionales, emailCuidador) {
     });
 }
 
+function openResumenPacienteModal(paciente, medicamentos, citas, bitacora) {
+    const resumenTexto = `
+Resumen del Paciente: ${paciente.nombre}
+------------------------------------------------
+Médico Asignado: ${paciente.profesional_nombre || 'No asignado'}
+Cuidador: ${paciente.cuidador_nombre || 'No asignado'}
+Estado General: ${paciente.estado_general || 'No especificado'}
+Nivel de Alerta: ${paciente.nivel_alerta || 'Normal'}
+
+Medicamentos Actuales:
+${medicamentos.length ? medicamentos.map(m => `- ${m.nombre}: ${m.dosis}, ${m.frecuencia}`).join('\n') : 'Sin medicamentos registrados.'}
+
+Próximas Citas:
+${citas.length ? citas.filter(c => new Date(c.fecha_hora) > new Date()).sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora)).map(c => `- ${new Date(c.fecha_hora).toLocaleString('es-ES')}: ${c.motivo || 'Control'}`).join('\n') : 'Sin próximas citas.'}
+
+Últimos Registros de Bitácora:
+${bitacora.length ? bitacora.sort((a, b) => new Date(b.fecha_registro) - new Date(a.fecha_registro)).slice(0, 5).map(r => `- ${new Date(r.fecha_registro).toLocaleString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}: ${r.notas || 'Sin notas.'}`).join('\n') : 'Sin registros de bitácora.'}
+    `.trim();
+
+    const modalHtml = `
+        <div class="card fade-in">
+            <h3>Resumen para Compartir</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">Copia este resumen para compartirlo con familiares o responsables.</p>
+            <textarea readonly style="width:100%; height: 250px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:12px; font-family:monospace; font-size:0.8rem; line-height:1.6;">${resumenTexto}</textarea>
+            <div class="form-actions" style="margin-top:12px;">
+                <button id="btn-copiar-resumen" class="btn btn-primary" style="width:100%;">Copiar Resumen</button>
+            </div>
+            <div id="copiar-resumen-feedback" style="margin-top:8px; text-align:center; color:#16a34a; font-weight:600; display:none;">¡Resumen copiado!</div>
+        </div>
+    `;
+
+    openFloatingModal(modalHtml);
+
+    document.getElementById('btn-copiar-resumen')?.addEventListener('click', () => {
+        navigator.clipboard.writeText(resumenTexto).then(() => {
+            const feedback = document.getElementById('copiar-resumen-feedback');
+            if (feedback) {
+                feedback.style.display = 'block';
+                setTimeout(() => { feedback.style.display = 'none'; }, 2000);
+            }
+        });
+    });
+}
+
 async function renderPacienteDetalle(container, idPaciente, rol) {
     const paciente = await obtenerPacienteDetalle(idPaciente);
     if (!paciente) {
@@ -1976,6 +2020,7 @@ async function renderPacienteDetalle(container, idPaciente, rol) {
                 </div>
                 <div class="form-actions" style="margin-top:16px;">
                     <button type="button" id="volver-paciente-lista" class="btn btn-secondary">Volver</button>
+                    <button type="button" id="btn-compartir-resumen" class="btn btn-primary" style="background-color: #5a9a8c;"><i class="ti ti-share" style="margin-right: 6px;"></i>Compartir Resumen</button>
                     <button type="submit" class="btn btn-primary">Guardar cambios</button>
                 </div>
                 <div id="editar-paciente-error" style="margin-top:10px; color:#ef4444; display:none;"></div>
@@ -2044,6 +2089,16 @@ async function renderPacienteDetalle(container, idPaciente, rol) {
 
     // Boton Volver
     document.getElementById('volver-paciente-lista')?.addEventListener('click', closeFloatingModal);
+
+    // Botón Compartir Resumen
+    document.getElementById('btn-compartir-resumen')?.addEventListener('click', async () => {
+        const [medicamentos, citas, bitacora] = await Promise.all([
+            obtenerMedicamentosPaciente(idPaciente),
+            obtenerCitasPaciente(idPaciente),
+            obtenerBitacoraRegistros(idPaciente)
+        ]);
+        openResumenPacienteModal(paciente, medicamentos, citas, bitacora);
+    });
 
     // Submit del formulario de edicion
     const form = document.getElementById('editar-paciente-form');
