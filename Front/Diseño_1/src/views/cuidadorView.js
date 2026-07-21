@@ -184,6 +184,35 @@ export function cuidadorView() {
     `;
 }
 
+function populateRegisterMedsSelect(pacientes) {
+    const select = document.getElementById('caregiver-register-paciente-select');
+    if (!select) return;
+    if (!pacientes || pacientes.length === 0) {
+        select.innerHTML = '<option value="">Sin pacientes asignados</option>';
+        return;
+    }
+    select.innerHTML = pacientes.map(p =>
+        `<option value="${p.id}">${p.nombre || 'Paciente sin nombre'}</option>`
+    ).join('');
+}
+
+function initDashboardMedsRedirect() {
+    const btn = document.getElementById('btn-ir-a-registrar-medicamento');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+        const select = document.getElementById('caregiver-register-paciente-select');
+        if (!select) return;
+        const idPaciente = select.value;
+        if (!idPaciente) {
+            alert('Selecciona un paciente primero.');
+            return;
+        }
+        // Navegar a la vista de medicamentos
+        const navItem = document.querySelector('.sidebar-cuidador .menu-item[data-view="medicamentos"]');
+        if (navItem) navItem.click();
+    });
+}
+
 async function cargarContenidoDashboardCuidador() {
     const session = obtenerSesionActiva();
     const emailCuidador = session?.email || '';
