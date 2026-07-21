@@ -1,12 +1,12 @@
 // src/views/medicoView.js
-import { obtenerDatosSeccion, obtenerPacientes, asignarPacienteProfesional, obtenerPacienteDetalle, actualizarPaciente, obtenerCitasPaciente, obtenerBitacoraRegistros, obtenerSolicitudesPendientes, aceptarSolicitudVinculacion, rechazarSolicitudVinculacion, crearSolicitudVinculacion, obtenerPacientesDisponibles, obtenerProfesionales } from '../services/data.service.js';
+import { obtenerDatosSeccion, obtenerPacientes, asignarPacienteProfesional, obtenerPacienteDetalle, actualizarPaciente, obtenerCitasPaciente, obtenerBitacoraRegistros, obtenerBitacoraPlantillas, crearBitacoraPlantilla, crearBitacoraRegistro, obtenerMedicamentosPaciente, crearMedicamentoPaciente, actualizarMedicamentoPaciente, crearCitaPaciente, actualizarCitaPaciente, eliminarCitaPaciente, obtenerSolicitudesPendientes, aceptarSolicitudVinculacion, rechazarSolicitudVinculacion, crearSolicitudVinculacion, obtenerPacientesDisponibles, obtenerProfesionales, obtenerSolicitudesEnviadas } from '../services/data.service.js';
 import { cerrarSesion, obtenerSesionActiva } from '../services/auth.services.js';
 
 export function profesionalView() {
     const session = obtenerSesionActiva();
     const nombreProfesional = session?.nombre || 'Profesional';
+    const iniciales = (session?.nombre || 'P').charAt(0).toUpperCase();
 
-    // Unificamos el punto de carga de estilos al CSS compilado centralizado
     if (!document.getElementById('zoe-global-style')) {
         const styleLink = document.createElement('link');
         styleLink.id = 'zoe-global-style';
@@ -15,109 +15,117 @@ export function profesionalView() {
         document.head.appendChild(styleLink);
     }
 
-    // Obtener fecha dinámica
     const fechaActual = obtenerFechaFormateada();
 
     const estructuraDashboardBase = `
-        <div class="dashboard-grid fade-in">v
-                <div class="card professional-hero-card">
-                    <div>
-                        <span class="professional-pill">Panel clínico premium</span>
-                        <h3 id="professional-hero-title">Tu espacio de observación y decisión está más claro y elegante</h3>
-                        <p id="professional-hero-description">Coordina pacientes, revisa indicadores y prioriza atenciones con una vista más cercana a un entorno hospitalario moderno.</p>
-                    </div>
-                    <div class="professional-hero-metrics" id="professional-hero-metrics">
-                        <div class="professional-metric-chip">Cargando pacientes...</div>
-                    </div>
-                </div>
-
-                <div id="professional-patient-summary" class="card professional-summary-card"></div>
-
-                <div class="professional-stats-grid">
-                    <div class="professional-stat-card">
-                        <span class="professional-stat-label">Pacientes en seguimiento</span>
-                        <strong>12</strong>
-                    </div>
-                    <div class="professional-stat-card">
-                        <span class="professional-stat-label">Reportes pendientes</span>
-                        <strong>5</strong>
-                    </div>
-                    <div class="professional-stat-card">
-                        <span class="professional-stat-label">Indicaciones emitidas</span>
-                        <strong>18</strong>
-                    </div>
-                    <div class="professional-stat-card">
-                        <span class="professional-stat-label">Estado clínico general</span>
-                        <strong>Estable</strong>
+        <div class="dashboard-grid fade-in">
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card" data-target="pacientes">
+                    <div class="kpi-icon"><i class="ti ti-users"></i></div>
+                    <div class="kpi-info">
+                        <span class="kpi-value" id="kpi-pacientes">0</span>
+                        <span class="kpi-label">Pacientes</span>
                     </div>
                 </div>
-
-                <div class="card next-appointment-card">
-                    <h3>PRÓXIMA CONSULTA / ASISTENCIA</h3>
-                    <div class="doctor-info">
-                        <div class="doctor-avatar"></div>
-                        <div class="doctor-meta">
-                            <h4 id="professional-next-patient">Paciente: Cargando...</h4>
-                            <p id="professional-next-description">Esperando información del paciente asignado.</p>
-                        </div>
-                    </div>
-                    <div class="appointment-date">
-                        <span><i class="ti ti-calendar"></i> Hoy, 10 Jul</span>
-                        <span><i class="ti ti-clock"></i> 02:30 PM</span>
-                        <span><i class="ti ti-map-pin"></i> Consultorio 3</span>
-                    </div>
-                    <div class="card-actions">
-                        <button class="btn-reprogramar" id="btn-reprogramar">Reprogramar</button>
-                        <button class="btn-detalles" id="btn-historial">Ver Historial</button>
+                <div class="kpi-card" data-target="medicacion">
+                    <div class="kpi-icon"><i class="ti ti-pill"></i></div>
+                    <div class="kpi-info">
+                        <span class="kpi-value" id="kpi-medicamentos">0</span>
+                        <span class="kpi-label">Medicamentos</span>
                     </div>
                 </div>
-
-                <div class="vitals-grid">
-                    <div class="vital-card vital-glucose">
-                        <span class="vital-value">102</span>
-                        <span class="vital-label">Glucosa mg/dL</span>
-                    </div>
-                    <div class="vital-card vital-heart">
-                        <span class="vital-value">78</span>
-                        <span class="vital-label">Ritmo cardíaco</span>
-                    </div>
-                    <div class="vital-card vital-oxygen">
-                        <span class="vital-value">98%</span>
-                        <span class="vital-label">Saturación O2</span>
-                    </div>
-                    <div class="vital-card vital-pressure">
-                        <span class="vital-value">139</span>
-                        <span class="vital-label">Presión arterial</span>
+                <div class="kpi-card" data-target="citas">
+                    <div class="kpi-icon"><i class="ti ti-calendar-event"></i></div>
+                    <div class="kpi-info">
+                        <span class="kpi-value" id="kpi-citas">0</span>
+                        <span class="kpi-label">Citas</span>
                     </div>
                 </div>
+                <div class="kpi-card" data-target="bitacora">
+                    <div class="kpi-icon"><i class="ti ti-notes"></i></div>
+                    <div class="kpi-info">
+                        <span class="kpi-value" id="kpi-registros">0</span>
+                        <span class="kpi-label">Registros</span>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Hero -->
+            <div class="card professional-hero-card">
+                <div>
+                    <span class="professional-pill">Panel clínico</span>
+                    <h3 id="professional-hero-title">Tu espacio de observación y decisión</h3>
+                    <p id="professional-hero-description">Coordina pacientes, revisa indicadores y prioriza atenciones.</p>
+                </div>
+                <div class="professional-hero-metrics" id="professional-hero-metrics">
+                    <div class="professional-metric-chip">Cargando pacientes...</div>
+                </div>
+            </div>
+
+            <!-- Checklist + Gráfico -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="card checklist-card">
+                    <h3><i class="ti ti-checklist"></i> Checklist del día</h3>
+                    <ul class="caregiver-checklist" id="checklist-diario">
+                        <li><span class="checkbox-placeholder"></span> Revisar bitácora del paciente</li>
+                        <li><span class="checkbox-placeholder"></span> Verificar medicación</li>
+                        <li><span class="checkbox-placeholder"></span> Confirmar próxima cita</li>
+                        <li><span class="checkbox-placeholder"></span> Actualizar observaciones</li>
+                    </ul>
+                </div>
                 <div class="card chart-card">
                     <div class="chart-header">
-                        <h3>Evolución Clínica del Paciente</h3>
+                        <h3>Registros de Bitácora (7 días)</h3>
                     </div>
-                    <div class="chart-placeholder">
-                        <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">
-                            <i class="ti ti-chart-line" style="font-size: 1.8rem; display: block; margin-bottom: 6px; opacity: 0.7;"></i>
-                            [Gráfico de estabilidad del paciente]
-                        </p>
+                    <div id="chart-bitacora-simple" class="chart-simple-bars">
+                        <p style="text-align:center;color:var(--text-muted);font-size:0.85rem;">Cargando datos...</p>
                     </div>
                 </div>
+            </div>
 
-            </section>
-
-            <aside class="right-content-column">
-                <div class="card tracking-card professional-side-panel">
-                    <h3>Seguimiento del Plan de Cuidado</h3>
-                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">Progreso General</p>
+            <!-- Progreso medicamentos -->
+            <div class="card">
+                <h3>Progreso de Medicamentos</h3>
+                <div id="medication-progress-container">
                     <div class="progress-bar-container">
-                        <div class="progress-bar" style="width: 60%;"></div>
+                        <div class="progress-bar" id="medication-progress-bar" style="width:0%;"></div>
                     </div>
                     <div class="progress-labels">
-                        <span>60% completado</span>
+                        <span id="medication-progress-text">0% completado</span>
                     </div>
+                </div>
+                <div id="medication-list-preview" style="margin-top:8px;"></div>
+            </div>
+
+            <!-- Próximas Citas -->
+            <div class="card next-appointment-card">
+                <h3>PRÓXIMAS CITAS</h3>
+                <div id="proximas-citas-container">
+                    <p style="color:var(--text-muted);">Cargando citas...</p>
+                </div>
+            </div>
+
+            <!-- Último registro bitácora -->
+            <div class="card">
+                <h3>Último Registro de Bitácora</h3>
+                <div id="ultimo-registro-bitacora">
+                    <p style="color:var(--text-muted);">Cargando último registro...</p>
+                </div>
+            </div>
+
+            <!-- Panel derecho -->
+            <div class="right-content-column">
+                <div class="card tracking-card professional-side-panel">
+                    <h3>Seguimiento del Plan de Cuidado</h3>
+                    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">Progreso General</p>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" style="width:60%;"></div>
+                    </div>
+                    <div class="progress-labels"><span>60% completado</span></div>
                     <div class="professional-signal-list">
                         <span class="professional-signal">✓ Ruta de medicación ajustada</span>
-                        <span class="professional-signal">✓ Observaciones del cuidador revisadas</span>
+                        <span class="professional-signal">✓ Observaciones revisadas</span>
                     </div>
                 </div>
 
@@ -125,36 +133,36 @@ export function profesionalView() {
                     <h3>Acciones rápidas</h3>
                     <ul class="actions-list">
                         <li class="action-item" data-target="medicacion">Emitir indicaciones <span class="arrow">›</span></li>
-                        <li class="action-item" data-target="resultados">Subir reporte clínico <span class="arrow">›</span></li>
+                        <li class="action-item" data-target="bitacora">Nuevo registro <span class="arrow">›</span></li>
                     </ul>
                 </div>
 
                 <div class="card reminder-card">
-                    <div class="rhead"><i class="ti ti-notes"></i> Notas del Turno</div>
-                    <p>Revisar observaciones enviadas por el cuidador en la mañana.</p>
+                    <div class="rhead"><i class="ti ti-bell"></i> Recordatorio</div>
+                    <p>Revisar observaciones enviadas por el cuidador.</p>
                 </div>
-            </aside>
+            </div>
         </div>
     `;
 
     setTimeout(() => {
         initProfesionalDashboardEvents(estructuraDashboardBase);
         actualizarIndicadoresDeNotificacion();
-        cargarContenidoDashboardProfesional();
+        cargarDashboardConDatosReales();
     }, 0);
 
     return `
         <div class="dashboard-layout layout-profesional">
-            
             <aside class="sidebar sidebar-profesional">
                 <div class="sidebar-logo">Zoe Care</div>
                 <nav class="sidebar-menu">
                     <a href="#" class="menu-item active" data-view="dashboard"><i class="ti ti-smart-home"></i> Dashboard</a>
                     <a href="#" class="menu-item" data-view="pacientes"><i class="ti ti-users"></i> Mis Pacientes <span class="notification-badge"></span></a>
                     <a href="#" class="menu-item" data-view="citas"><i class="ti ti-calendar-event"></i> Citas / Visitas <span class="notification-badge"></span></a>
-                    <a href="#" class="menu-item" data-view="mensajes"><i class="ti ti-message-circle"></i> Mensajes</a>
-                    <a href="#" class="menu-item" data-view="resultados"><i class="ti ti-file-report"></i> Resultados</a>
-                    <a href="#" class="menu-item" data-view="medicacion"><i class="ti ti-pill"></i> Indicaciones</a>
+                    <a href="#" class="menu-item" data-view="bitacora"><i class="ti ti-notes"></i> Bitácora</a>
+                    <a href="#" class="menu-item" data-view="medicacion"><i class="ti ti-pill"></i> Medicamentos</a>
+                    <a href="#" class="menu-item" data-view="calendario"><i class="ti ti-calendar"></i> Calendario</a>
+                    <a href="#" class="menu-item" data-view="solicitudes"><i class="ti ti-link"></i> Solicitudes</a>
                     <a href="#" class="menu-item" data-view="perfil"><i class="ti ti-user"></i> Mi Perfil</a>
                     <a href="#/login" class="menu-item logout-item"><i class="ti ti-logout"></i> Cerrar Sesión</a>
                 </nav>
@@ -163,9 +171,7 @@ export function profesionalView() {
             <div class="dashboard-main">
                 <header class="dashboard-header">
                     <button class="menu-hamburger-btn" id="hamburguesa-toggle" aria-label="Abrir menú">
-                        <span></span>
-                        <span></span>
-                        <span></span>
+                        <span></span><span></span><span></span>
                     </button>
                     <div class="welcome-text">
                         <h2>Bienvenido ${nombreProfesional}</h2>
@@ -175,14 +181,13 @@ export function profesionalView() {
                         <div class="header-search">
                             <input type="text" placeholder="Buscar pacientes, bitácora...">
                         </div>
-                        <div class="avatar">ZP</div>
+                        <div class="avatar">${iniciales}</div>
                     </div>
                 </header>
 
                 <div id="dynamic-content-area">
                     ${estructuraDashboardBase}
                 </div>
-
             </div>
         </div>
     `;
@@ -202,22 +207,31 @@ function obtenerFechaFormateada() {
     return fecha.charAt(0).toUpperCase() + fecha.slice(1);
 }
 
-async function cargarContenidoDashboardProfesional() {
+async function cargarDashboardConDatosReales() {
     const session = obtenerSesionActiva();
     const emailProfesional = session?.email || '';
     const pacientes = await obtenerPacientes('profesional', emailProfesional);
 
-    const heroTitle = document.getElementById('professional-hero-title');
-    const heroDescription = document.getElementById('professional-hero-description');
-    const heroMetrics = document.getElementById('professional-hero-metrics');
-    const summaryContainer = document.getElementById('professional-patient-summary');
-    const nextPatient = document.getElementById('professional-next-patient');
-    const nextDescription = document.getElementById('professional-next-description');
+    // Actualizar KPIs
+    const kpiPacientes = document.getElementById('kpi-pacientes');
+    const kpiMedicamentos = document.getElementById('kpi-medicamentos');
+    const kpiCitas = document.getElementById('kpi-citas');
+    const kpiRegistros = document.getElementById('kpi-registros');
+
+    if (kpiPacientes) kpiPacientes.textContent = pacientes.length;
+
+    let totalMedicamentos = 0;
+    let totalCitas = 0;
+    let totalRegistros = 0;
+    let proximasCitasHtml = '';
+    let ultimoRegistroHtml = '';
+    let checklistData = [];
 
     if (pacientes.length) {
         const pacientePrincipal = pacientes[0];
-        if (heroTitle) heroTitle.textContent = `Seguimiento activo para ${pacientePrincipal.nombre || 'tu paciente'}`;
-        if (heroDescription) heroDescription.textContent = 'Los pacientes relacionados con tu cuenta se muestran automáticamente desde la base de datos del backend.';
+
+        // Hero metrics
+        const heroMetrics = document.getElementById('professional-hero-metrics');
         if (heroMetrics) {
             heroMetrics.innerHTML = `
                 <div class="professional-metric-chip">${pacientes.length} paciente${pacientes.length > 1 ? 's' : ''} asignado${pacientes.length > 1 ? 's' : ''}</div>
@@ -225,19 +239,72 @@ async function cargarContenidoDashboardProfesional() {
                 <div class="professional-metric-chip">${pacientePrincipal.cuidador_nombre ? `Cuidador: ${pacientePrincipal.cuidador_nombre}` : 'Sin cuidador asignado'}</div>
             `;
         }
-        if (nextPatient) nextPatient.textContent = `Paciente: ${pacientePrincipal.nombre || 'Sin nombre'}`;
-        if (nextDescription) nextDescription.textContent = pacientePrincipal.direccion ? `Seguimiento y coordinación para ${pacientePrincipal.direccion}` : 'Sin información adicional registrada.';
-        if (summaryContainer) {
-            summaryContainer.innerHTML = `
-                <h3>Pacientes asignados</h3>
-                <ul class="professional-patient-list">
-                    ${pacientes.map((paciente) => `<li><strong>${paciente.nombre || 'Paciente sin nombre'}</strong>${paciente.cuidador_nombre ? ` · Cuidador: ${paciente.cuidador_nombre}` : ''}</li>`).join('')}
-                </ul>
-            `;
+
+        const heroTitle = document.getElementById('professional-hero-title');
+        const heroDesc = document.getElementById('professional-hero-description');
+        if (heroTitle) heroTitle.textContent = `Seguimiento activo para ${pacientePrincipal.nombre || 'tu paciente'}`;
+        if (heroDesc) heroDesc.textContent = 'Los pacientes relacionados con tu cuenta se muestran automáticamente desde la base de datos del backend.';
+
+        // Obtener datos agregados
+        const todosLosRegistros = [];
+        const todasLasCitas = [];
+
+        for (const p of pacientes) {
+            const meds = await obtenerMedicamentosPaciente(p.id);
+            totalMedicamentos += meds.length;
+
+            const citas = await obtenerCitasPaciente(p.id);
+            todasLasCitas.push(...citas.map(c => ({ ...c, paciente: p.nombre, id_paciente: p.id })));
+            totalCitas += citas.length;
+
+            const registros = await obtenerBitacoraRegistros(p.id);
+            todosLosRegistros.push(...registros.map(r => ({ ...r, paciente: p.nombre })));
+            totalRegistros += registros.length;
         }
+
+        if (kpiMedicamentos) kpiMedicamentos.textContent = totalMedicamentos;
+        if (kpiCitas) kpiCitas.textContent = totalCitas;
+        if (kpiRegistros) kpiRegistros.textContent = totalRegistros;
+
+        // Próximas citas
+        const ahora = new Date();
+        const proximas = todasLasCitas
+            .filter(c => new Date(c.fecha_hora) >= ahora)
+            .sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora))
+            .slice(0, 5);
+
+        if (proximas.length) {
+            proximasCitasHtml = proximas.map(c => `
+                <div class="cita-item" style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-light);">
+                    <span><strong>${c.paciente || 'Paciente'}</strong> — ${c.motivo || 'Sin motivo'}</span>
+                    <span style="color:var(--text-muted);font-size:0.85rem;">${formatFechaCorta(c.fecha_hora)}</span>
+                </div>
+            `).join('');
+        } else {
+            proximasCitasHtml = '<p style="color:var(--text-muted);font-size:0.9rem;">No hay próximas citas programadas.</p>';
+        }
+
+        // Último registro
+        todosLosRegistros.sort((a, b) => new Date(b.fecha_registro) - new Date(a.fecha_registro));
+        if (todosLosRegistros.length) {
+            const ultimo = todosLosRegistros[0];
+            ultimoRegistroHtml = `
+                <div style="padding:8px 0;">
+                    <p><strong>${ultimo.paciente || 'Paciente'}</strong> — ${formatFechaCorta(ultimo.fecha_registro)}</p>
+                    <p style="color:var(--text-muted);font-size:0.9rem;margin-top:4px;">${ultimo.notas || 'Sin notas'}</p>
+                </div>
+            `;
+        } else {
+            ultimoRegistroHtml = '<p style="color:var(--text-muted);font-size:0.9rem;">Aún no hay registros de bitácora.</p>';
+        }
+
+        // Checklist dinámico
+        if (proximas.length) checklistData.push('Revisar bitácora del paciente');
+        if (totalMedicamentos) checklistData.push('Verificar medicación');
+        if (proximas.length) checklistData.push('Confirmar próxima cita');
+        checklistData.push('Actualizar observaciones');
     } else {
-        if (heroTitle) heroTitle.textContent = 'Aún no tienes pacientes asignados';
-        if (heroDescription) heroDescription.textContent = 'Cuando un paciente sea creado y vinculado a tu cuenta, aparecerá aquí automáticamente.';
+        const heroMetrics = document.getElementById('professional-hero-metrics');
         if (heroMetrics) {
             heroMetrics.innerHTML = `
                 <div class="professional-metric-chip">Sin pacientes aún</div>
@@ -245,15 +312,82 @@ async function cargarContenidoDashboardProfesional() {
                 <div class="professional-metric-chip">Listo para recibir datos</div>
             `;
         }
-        if (nextPatient) nextPatient.textContent = 'Paciente: Sin pacientes asignados';
-        if (nextDescription) nextDescription.textContent = 'No hay información de pacientes para mostrar todavía.';
-        if (summaryContainer) {
-            summaryContainer.innerHTML = `
-                <h3>Pacientes asignados</h3>
-                <p style="color:var(--text-muted); margin-top:8px;">Aún no tienes pacientes relacionados. El contenido aparecerá aquí cuando el backend los registre.</p>
-            `;
+        proximasCitasHtml = '<p style="color:var(--text-muted);font-size:0.9rem;">No hay pacientes asignados aún.</p>';
+        ultimoRegistroHtml = '<p style="color:var(--text-muted);font-size:0.9rem;">Aún no hay registros de bitácora.</p>';
+        checklistData = ['Revisar bitácora del paciente', 'Verificar medicación', 'Confirmar próxima cita', 'Actualizar observaciones'];
+    }
+
+    // Render checklist
+    const checklistEl = document.getElementById('checklist-diario');
+    if (checklistEl) {
+        checklistEl.innerHTML = checklistData.map(item => `
+            <li><span class="checkbox-placeholder"></span> ${item}</li>
+        `).join('');
+    }
+
+    // Render próximas citas
+    const citasContainer = document.getElementById('proximas-citas-container');
+    if (citasContainer) citasContainer.innerHTML = proximasCitasHtml;
+
+    // Render último registro
+    const ultimoRegistroContainer = document.getElementById('ultimo-registro-bitacora');
+    if (ultimoRegistroContainer) ultimoRegistroContainer.innerHTML = ultimoRegistroHtml;
+
+    // Progreso de medicamentos
+    const progressBar = document.getElementById('medication-progress-bar');
+    const progressText = document.getElementById('medication-progress-text');
+    const medListPreview = document.getElementById('medication-list-preview');
+    if (progressBar && progressText) {
+        const pct = totalMedicamentos > 0 ? Math.min(Math.round((totalRegistros / (totalMedicamentos * 7)) * 100), 100) : 0;
+        progressBar.style.width = `${pct}%`;
+        progressText.textContent = `${pct}% completado`;
+    }
+    if (medListPreview) {
+        medListPreview.innerHTML = totalMedicamentos > 0
+            ? `<p style="color:var(--text-muted);font-size:0.85rem;">${totalMedicamentos} medicamento${totalMedicamentos > 1 ? 's' : ''} registrado${totalMedicamentos > 1 ? 's' : ''}</p>`
+            : '<p style="color:var(--text-muted);font-size:0.85rem;">Sin medicamentos registrados</p>';
+    }
+
+    // Gráfico simple de bitácora (7 días)
+    renderChartBitacoraSimple(pacientes);
+}
+
+async function renderChartBitacoraSimple(pacientes) {
+    const chartContainer = document.getElementById('chart-bitacora-simple');
+    if (!chartContainer) return;
+
+    // Generar últimos 7 días
+    const dias = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        dias.push(d.toISOString().split('T')[0]);
+    }
+
+    // Contar registros por día
+    const conteo = {};
+    for (const dia of dias) conteo[dia] = 0;
+
+    for (const p of pacientes) {
+        const registros = await obtenerBitacoraRegistros(p.id);
+        for (const r of registros) {
+            const fechaReg = r.fecha_registro ? r.fecha_registro.split('T')[0] : '';
+            if (conteo[fechaReg] !== undefined) conteo[fechaReg]++;
         }
     }
+
+    const maxVal = Math.max(...Object.values(conteo), 1);
+    const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+    chartContainer.innerHTML = '<div style="display:flex;align-items:flex-end;gap:8px;height:120px;padding:8px 0;">' +
+        dias.map((dia, i) => {
+            const d = new Date(dia + 'T12:00:00');
+            const altura = Math.max((conteo[dia] / maxVal) * 100, 2);
+            return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+                <div style="width:100%;background:var(--primary-light);border-radius:4px 4px 0 0;height:${altura}px;min-height:4px;transition:height 0.3s;" title="${conteo[dia]} registros"></div>
+                <span style="font-size:0.65rem;color:var(--text-muted);margin-top:4px;">${diasSemana[d.getDay()]}</span>
+            </div>`;
+        }).join('') + '</div>';
 }
 
 function initProfesionalDashboardEvents(dashboardBaseHtml) {
@@ -270,7 +404,7 @@ function initProfesionalDashboardEvents(dashboardBaseHtml) {
 
             const vistaSolicitada = item.getAttribute('data-view');
 
-            if (vistaSolicitada === 'dashboard') {
+                        if (vistaSolicitada === 'dashboard') {
                 contentArea.innerHTML = dashboardBaseHtml;
                 initCardButtonsEvents();
             } else if (vistaSolicitada === 'pacientes') {
@@ -279,15 +413,18 @@ function initProfesionalDashboardEvents(dashboardBaseHtml) {
             } else if (vistaSolicitada === 'citas') {
                 contentArea.innerHTML = '<div class="card fade-in" style="text-align:center;"><p style="color:var(--text-muted); font-weight:600;">Cargando citas...</p></div>';
                 await renderCitasSection(contentArea);
-            } else if (vistaSolicitada === 'mensajes') {
-                contentArea.innerHTML = '<div class="card fade-in" style="text-align:center;"><p style="color:var(--text-muted); font-weight:600;">Cargando mensajes...</p></div>';
-                await renderMensajesSection(contentArea);
-            } else if (vistaSolicitada === 'resultados') {
-                contentArea.innerHTML = '<div class="card fade-in" style="text-align:center;"><p style="color:var(--text-muted); font-weight:600;">Cargando resultados...</p></div>';
-                await renderResultadosSection(contentArea);
+            } else if (vistaSolicitada === 'bitacora') {
+                contentArea.innerHTML = '<div class="card fade-in" style="text-align:center;"><p style="color:var(--text-muted); font-weight:600;">Cargando bitácora...</p></div>';
+                await renderBitacoraSection(contentArea);
             } else if (vistaSolicitada === 'medicacion') {
-                contentArea.innerHTML = '<div class="card fade-in" style="text-align:center;"><p style="color:var(--text-muted); font-weight:600;">Cargando indicaciones...</p></div>';
-                await renderIndicacionesSection(contentArea);
+                contentArea.innerHTML = '<div class="card fade-in" style="text-align:center;"><p style="color:var(--text-muted); font-weight:600;">Cargando medicamentos...</p></div>';
+                await renderMedicamentosSection(contentArea);
+            } else if (vistaSolicitada === 'calendario') {
+                contentArea.innerHTML = '<div class="card fade-in" style="text-align:center;"><p style="color:var(--text-muted); font-weight:600;">Cargando calendario...</p></div>';
+                await renderCalendarioSection(contentArea);
+            } else if (vistaSolicitada === 'solicitudes') {
+                contentArea.innerHTML = '<div class="card fade-in" style="text-align:center;"><p style="color:var(--text-muted); font-weight:600;">Cargando solicitudes...</p></div>';
+                await renderSolicitudesSection(contentArea);
             } else if (vistaSolicitada === 'perfil') {
                 contentArea.innerHTML = '<div class="card fade-in" style="text-align:center;"><p style="color:var(--text-muted); font-weight:600;">Cargando perfil...</p></div>';
                 await renderPerfilSection(contentArea);
@@ -640,150 +777,133 @@ async function renderCitasSection(container) {
     `;
 }
 
-async function renderMensajesSection(container) {
+async function renderBitacoraSection(container) {
     const session = obtenerSesionActiva();
-    const pacientes = await obtenerPacientes(session?.rol || 'profesional', session?.email || '');
-    const mensajes = leerMensajes();
-    const pacientePrincipal = pacientes[0];
+    const emailProfesional = session?.email || '';
+    const pacientes = await obtenerPacientes('profesional', emailProfesional);
 
-    container.innerHTML = `
+    let html = `
         <div class="card fade-in section-hero-card" style="margin-bottom: 16px;">
-            <div>
-                <h3>Mensajes del equipo</h3>
-                <p>Recibe observaciones del cuidador y responde desde aquí con una conversación más clara y organizada.</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+                <div>
+                    <h3>Bitácora de Pacientes</h3>
+                    <p>Registros diarios de evolución, observaciones y novedades clínicas.</p>
+                </div>
+                <button id="btn-nuevo-registro-bitacora" class="btn-detalles" style="padding:0.8rem 1rem;">+ Nuevo registro</button>
             </div>
         </div>
-        <div class="card fade-in message-shell">
-            <div class="message-header">
-                <h4>${pacientePrincipal ? `Seguimiento de ${pacientePrincipal.nombre}` : 'Conversación clínica'}</h4>
-                <span class="status-pill">En línea</span>
+    `;
+
+    if (!pacientes.length) {
+        html += `
+            <div class="card fade-in empty-state-card">
+                <div class="empty-state-icon">📝</div>
+                <h4>No hay pacientes asignados</h4>
+                <p>Para crear registros de bitácora, primero debes tener pacientes vinculados a tu perfil.</p>
             </div>
-            <div class="message-list">
-                ${mensajes.length ? mensajes.map((mensaje) => `
-                    <div class="message-bubble ${mensaje.tipo === 'entrada' ? 'incoming' : 'outgoing'}">
-                        <strong>${mensaje.remitente}</strong>
-                        <p>${mensaje.texto}</p>
-                        <span>${formatFechaCorta(mensaje.hora)}</span>
+        `;
+        container.innerHTML = html;
+        return;
+    }
+
+    const todosLosRegistros = [];
+    for (const p of pacientes) {
+        const registros = await obtenerBitacoraRegistros(p.id);
+        todosLosRegistros.push(...registros.map(r => ({ ...r, paciente_nombre: p.nombre, id_paciente: p.id })));
+    }
+    todosLosRegistros.sort((a, b) => new Date(b.fecha_registro) - new Date(a.fecha_registro));
+
+    const plantillas = await obtenerBitacoraPlantillas();
+
+    html += `
+        <div class="section-grid">
+            ${todosLosRegistros.length ? todosLosRegistros.slice(0, 20).map(r => `
+                <div class="card info-compact-card">
+                    <div class="card-title-row">
+                        <h4>${r.paciente_nombre || 'Paciente'}</h4>
+                        <span class="status-pill">${formatFechaCorta(r.fecha_registro)}</span>
                     </div>
-                `).join('') : '<div class="empty-state-card"><div class="empty-state-icon">💬</div><p>No hay mensajes todavía.</p></div>'}
-            </div>
-            <form id="mensaje-form" class="message-form">
-                <textarea id="mensaje-input" rows="3" placeholder="Escribe una respuesta o una indicación para el cuidador..."></textarea>
-                <button type="submit" class="btn-submit">Enviar mensaje</button>
+                    <div class="info-grid">
+                        <div><strong>Notas</strong><span>${r.notas || 'Sin notas'}</span></div>
+                        <div><strong>Estado</strong><span>${r.estado_animo || r.estado || 'Sin especificar'}</span></div>
+                    </div>
+                </div>
+            `).join('') : '<div class="card empty-state-card"><div class="empty-state-icon">📝</div><h4>Sin registros aún</h4><p>Usa el botón "+ Nuevo registro" para crear la primera entrada de bitácora.</p></div>'}
+        </div>
+        <div id="nuevo-registro-bitacora-form"></div>
+    `;
+
+    container.innerHTML = html;
+
+    document.getElementById('btn-nuevo-registro-bitacora')?.addEventListener('click', () => {
+        renderFormNuevoRegistroBitacora(container, pacientes, plantillas);
+    });
+}
+
+function renderFormNuevoRegistroBitacora(container, pacientes, plantillas) {
+    const formContainer = document.getElementById('nuevo-registro-bitacora-form');
+    if (!formContainer) return;
+
+    const pacienteOptions = pacientes.map(p => `<option value="${p.id}">${p.nombre || 'Sin nombre'}</option>`).join('');
+    const plantillaOptions = plantillas.length
+        ? plantillas.map(pt => `<option value="${pt.id}">${pt.nombre || 'Plantilla'}</option>`).join('')
+        : '<option value="">Sin plantillas disponibles</option>';
+
+    formContainer.innerHTML = `
+        <div class="card fade-in" style="margin-top: 16px;">
+            <h4>Nuevo registro de bitácora</h4>
+            <form id="form-nuevo-registro" class="patient-form">
+                <div class="form-group">
+                    <label>Paciente</label>
+                    <select name="id_paciente" required>${pacienteOptions}</select>
+                </div>
+                <div class="form-group">
+                    <label>Plantilla (opcional)</label>
+                    <select name="id_plantilla">${plantillaOptions}</select>
+                </div>
+                <div class="form-group">
+                    <label>Notas / Observaciones</label>
+                    <textarea name="notas" rows="4" required placeholder="Describe el estado del paciente..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Estado / Ánimo</label>
+                    <input type="text" name="estado_animo" placeholder="Ej: Estable, Mejorando, Alerta">
+                </div>
+                <div class="form-actions" style="display:flex; gap:12px; justify-content:flex-end;">
+                    <button type="button" id="cancelar-nuevo-registro" class="btn-outline-login">Cancelar</button>
+                    <button type="submit" class="btn-submit">Guardar registro</button>
+                </div>
+                <div id="registro-bitacora-error" style="margin-top:10px; color:#ef4444; display:none;"></div>
+                <div id="registro-bitacora-success" style="margin-top:10px; color:#2f855a; display:none;"></div>
             </form>
         </div>
     `;
 
-    const form = document.getElementById('mensaje-form');
-    form?.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const input = document.getElementById('mensaje-input');
-        const texto = input?.value?.trim();
-        if (!texto) return;
+    document.getElementById('cancelar-nuevo-registro')?.addEventListener('click', () => { formContainer.innerHTML = ''; });
 
-        const mensajesActualizados = [
-            ...leerMensajes(),
-            {
-                id: Date.now(),
-                remitente: 'Tú',
-                texto,
-                hora: new Date().toISOString(),
-                tipo: 'salida'
-            }
-        ];
-
-        guardarMensajes(mensajesActualizados);
-        renderMensajesSection(container);
+    document.getElementById('form-nuevo-registro')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const idPaciente = Number(fd.get('id_paciente'));
+        const idPlantilla = fd.get('id_plantilla') ? Number(fd.get('id_plantilla')) : null;
+        const notas = String(fd.get('notas') || '').trim();
+        const estadoAnimo = String(fd.get('estado_animo') || '').trim();
+        const errorDiv = document.getElementById('registro-bitacora-error');
+        const successDiv = document.getElementById('registro-bitacora-success');
+        if (errorDiv) errorDiv.style.display = 'none';
+        if (successDiv) successDiv.style.display = 'none';
+        if (!idPaciente || !notas) {
+            if (errorDiv) { errorDiv.textContent = 'Selecciona un paciente y escribe las notas.'; errorDiv.style.display = 'block'; }
+            return;
+        }
+        const resp = await crearBitacoraRegistro(idPaciente, { notas, estado_animo: estadoAnimo, id_plantilla: idPlantilla });
+        if (!resp.success) {
+            if (errorDiv) { errorDiv.textContent = resp.message || 'Error al guardar el registro.'; errorDiv.style.display = 'block'; }
+            return;
+        }
+        if (successDiv) { successDiv.textContent = 'Registro creado con éxito.'; successDiv.style.display = 'block'; }
+        setTimeout(() => renderBitacoraSection(container), 500);
     });
-}
-
-async function renderResultadosSection(container) {
-    const session = obtenerSesionActiva();
-    const pacientes = await obtenerPacientes(session?.rol || 'profesional', session?.email || '');
-
-    if (!pacientes.length) {
-        container.innerHTML = `
-            <div class="card fade-in empty-state-card">
-                <div class="empty-state-icon">🧪</div>
-                <h4>No hay resultados clínicos para mostrar</h4>
-                <p>Los registros del paciente aparecerán aquí cuando exista información disponible en el backend.</p>
-            </div>
-        `;
-        return;
-    }
-
-    const resultados = await Promise.all(pacientes.map(async (paciente) => {
-        const registros = await obtenerBitacoraRegistros(paciente.id);
-        const ultimoRegistro = registros[0] || null;
-        return {
-            paciente,
-            ultimoRegistro
-        };
-    }));
-
-    container.innerHTML = `
-        <div class="card fade-in section-hero-card" style="margin-bottom: 16px;">
-            <div>
-                <h3>Resultados y seguimiento</h3>
-                <p>Revisa la evolución clínica más reciente de cada paciente y su estado general.</p>
-            </div>
-        </div>
-        <div class="section-grid">
-            ${resultados.map(({ paciente, ultimoRegistro }) => `
-                <div class="card info-compact-card">
-                    <div class="card-title-row">
-                        <h4>${paciente.nombre || 'Paciente'}</h4>
-                        <span class="status-pill">${paciente.estado_general || 'Estable'}</span>
-                    </div>
-                    <div class="info-grid">
-                        <div><strong>Último registro</strong><span>${ultimoRegistro ? (ultimoRegistro.notas || 'Registro sin notas') : 'Sin registros'}</span></div>
-                        <div><strong>Fecha</strong><span>${ultimoRegistro ? formatFechaCorta(ultimoRegistro.fecha_registro) : 'Sin información'}</span></div>
-                        <div><strong>Observaciones</strong><span>${paciente.observaciones || 'Sin observaciones'}</span></div>
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-    `;
-}
-
-async function renderIndicacionesSection(container) {
-    const session = obtenerSesionActiva();
-    const pacientes = await obtenerPacientes(session?.rol || 'profesional', session?.email || '');
-
-    if (!pacientes.length) {
-        container.innerHTML = `
-            <div class="card fade-in empty-state-card">
-                <div class="empty-state-icon">💊</div>
-                <h4>Aún no hay indicaciones activas</h4>
-                <p>Las indicaciones sugeridas para el paciente aparecerán aquí cuando se encuentre información en el sistema.</p>
-            </div>
-        `;
-        return;
-    }
-
-    container.innerHTML = `
-        <div class="card fade-in section-hero-card" style="margin-bottom: 16px;">
-            <div>
-                <h3>Indicaciones clínicas</h3>
-                <p>Organiza revisiones, horarios de monitoreo y observaciones relevantes para cada paciente.</p>
-            </div>
-        </div>
-        <div class="section-grid">
-            ${pacientes.map((paciente) => `
-                <div class="card info-compact-card">
-                    <div class="card-title-row">
-                        <h4>${paciente.nombre || 'Paciente'}</h4>
-                        <span class="status-pill">${paciente.nivel_alerta || 'Normal'}</span>
-                    </div>
-                    <div class="info-grid">
-                        <div><strong>Monitoreo</strong><span>${paciente.horario_monitoreo || 'Sin horario de monitoreo'}</span></div>
-                        <div><strong>Observaciones</strong><span>${paciente.observaciones || 'Sin observaciones en el registro'}</span></div>
-                        <div><strong>Ubicación</strong><span>${paciente.ubicacion || 'Sin ubicación registrada'}</span></div>
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-    `;
 }
 
 async function renderPerfilSection(container) {

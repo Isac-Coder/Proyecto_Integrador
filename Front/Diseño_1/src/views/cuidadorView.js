@@ -705,29 +705,6 @@ async function initBitacoraGraficos(pacientes) {
     }
 }
 
-function populateRegisterMedsSelect(pacientes) {
-    const select = document.getElementById('caregiver-register-paciente-select');
-    if (!select) return;
-    select.innerHTML = pacientes.length
-        ? pacientes.map(p => `<option value="${p.id}">${p.nombre || 'Paciente'}</option>`).join('')
-        : '<option value="">Sin pacientes</option>';
-}
-
-function initDashboardMedsRedirect() {
-    const btnIrARegistrar = document.getElementById('btn-ir-a-registrar-medicamento');
-    if (btnIrARegistrar) {
-        btnIrARegistrar.addEventListener('click', () => {
-            const select = document.getElementById('caregiver-register-paciente-select');
-            if (!select || !select.value) {
-                alert('Selecciona un paciente primero desde el dashboard.');
-                return;
-            }
-            const menuItem = document.querySelector('.sidebar-cuidador .menu-item[data-view="medicamentos"]');
-            if (menuItem) menuItem.click();
-        });
-    }
-}
-
 function initCuidadorEvents(baseHtml) {
     const menuItems = document.querySelectorAll('.sidebar-cuidador .menu-item[data-view]');
     const contentArea = document.getElementById('cuidador-content-area');
