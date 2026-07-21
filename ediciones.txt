@@ -1,6 +1,5 @@
    Informe técnico de cambios realizados
 ===========================================
-
 Este documento describe de forma clara y organizada los cambios incorporados durante esta sesión en el proyecto, con el objetivo de que otros desarrolladores puedan comprender rápidamente qué se modificó, por qué y cómo se integra con el resto del sistema.
 
 1. Objetivo general
