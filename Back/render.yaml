@@ -3,7 +3,7 @@ services:
     name: zoecare-backend
     runtime: node
     rootDir: Back
-    buildCommand: npm ci
+    buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /health
     envVars:
