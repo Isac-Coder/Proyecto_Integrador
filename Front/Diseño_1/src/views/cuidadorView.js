@@ -169,8 +169,9 @@ export function cuidadorView() {
                         <span class="current-date" id="header-cuidador-fecha"></span>
                     </div>
                     <div class="header-actions-group">
-                        <div class="hleader-search">
-                            <input type="text" placeholder="Buscar pacientes, bitácora...">
+                                                <div class="header-search">
+                            <i class="ti ti-search" style="position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:1rem;pointer-events:none;z-index:1;"></i>
+                            <input type="text" placeholder="Buscar pacientes, bitácora..." style="padding-left:44px;">
                         </div>
                         <div class="avatar" id="header-cuidador-avatar">CU</div>
                     </div>
@@ -272,21 +273,25 @@ async function cargarContenidoDashboardCuidador() {
             `;
         }
 
-        // === Cargar medicamentos, citas y bitácora de TODOS los pacientes ===
+                // === Cargar medicamentos, citas y bitácora de TODOS los pacientes (PARALELO) ===
         const todosLosMeds = [];
         const todasLasCitas = [];
         const todasLasBitacoras = [];
 
-        for (const paciente of pacientes) {
-            const medicamentos = await obtenerMedicamentosPaciente(paciente.id);
+        const resultadosPacientes = await Promise.all(pacientes.map(async (paciente) => {
+            const [medicamentos, citas, registros] = await Promise.all([
+                obtenerMedicamentosPaciente(paciente.id),
+                obtenerCitasPaciente(paciente.id),
+                obtenerBitacoraRegistros(paciente.id)
+            ]);
+            return { paciente, medicamentos, citas, registros };
+        }));
+
+        for (const { paciente, medicamentos, citas, registros } of resultadosPacientes) {
             medicamentos.forEach(m => m._pacienteNombre = paciente.nombre);
             todosLosMeds.push(...medicamentos);
-
-            const citas = await obtenerCitasPaciente(paciente.id);
             citas.forEach(c => c._pacienteNombre = paciente.nombre);
             todasLasCitas.push(...citas);
-
-            const registros = await obtenerBitacoraRegistros(paciente.id);
             registros.forEach(r => r._pacienteNombre = paciente.nombre);
             todasLasBitacoras.push(...registros);
         }
@@ -1474,6 +1479,14 @@ function formatearFechaHora(fecha) {
     });
 }
 
+function getIdUnico(e) {
+    // Usamos una representación de fecha estable (sin milisegundos) para que
+    // al regenerar eventos desde los mismos datos, el ID sea el mismo
+    const d = new Date(e.fecha);
+    const fechaKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    return e.tipo + '-' + (e.idOriginal || e.medicamento || '') + '-' + e.paciente + '-' + fechaKey;
+}
+
 async function renderCalendarioSection(container) {
     const session = obtenerSesionActiva();
     const emailCuidador = session?.email || '';
@@ -1486,9 +1499,28 @@ async function renderCalendarioSection(container) {
 
     const pacienteDatos = await Promise.all(pacientes.map(async (paciente) => ({
         paciente: paciente.nombre,
+        idPaciente: paciente.id,
         medicamentos: await obtenerMedicamentosPaciente(paciente.id),
         citas: await obtenerCitasPaciente(paciente.id)
     })));
+
+        // Cache de estados: "completado" por id único del evento (persistente en localStorage)
+    const STORAGE_KEY = 'zoe_calendario_completados_' + (session?.email || 'anon');
+    const eventosCompletados = new Set();
+    try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        saved.forEach(id => eventosCompletados.add(id));
+    } catch (e) {
+        // ignorar
+    }
+
+    function guardarCompletados() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify([...eventosCompletados]));
+        } catch (e) {
+            // ignorar
+        }
+    }
 
     const eventos = pacienteDatos.reduce((lista, item) => {
         item.medicamentos.forEach((medicamento) => {
@@ -1497,44 +1529,236 @@ async function renderCalendarioSection(container) {
         item.citas.forEach((cita) => {
             const fecha = new Date(cita.fecha_hora);
             if (isNaN(fecha)) return;
-
             lista.push({
                 fecha,
                 paciente: item.paciente,
                 tipo: 'Cita',
+                idOriginal: cita.id,
+                idPaciente: item.idPaciente,
                 detalle: `Cita: ${cita.motivo || 'Sin motivo'} · ${cita.lugar || 'Lugar no definido'} · Estado: ${cita.estado || 'Agendada'}`
             });
         });
         return lista;
     }, []);
 
-    const eventosOrdenados = eventos.sort((a, b) => a.fecha - b.fecha);
-    const eventosHtml = eventosOrdenados.length
-        ? eventosOrdenados.map((evento) => `
-            <div class="registro-value">
-                <strong>${formatearFechaHora(evento.fecha)}</strong>
-                <span>${evento.paciente} — ${evento.tipo === 'Cita' ? 'Cita' : evento.medicamento}</span>
-                <small style="display:block; margin-top:6px; color:var(--text-muted);">${evento.detalle}</small>
-            </div>
-          `).join('')
-        : '<p style="color:var(--text-muted);">No hay eventos programados para los próximos días.</p>';
+    // Variables de navegación
+    let mesActual = new Date().getMonth();
+    let añoActual = new Date().getFullYear();
 
-    container.innerHTML = `
-        <div class="card fade-in" style="margin-bottom:18px;">
+        function renderizarCalendario() {
+    const mesNombre = new Date(añoActual, mesActual).toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+
+    // Filtrar eventos del mes actual
+    const eventosDelMes = eventos.filter(e => {
+        const f = new Date(e.fecha);
+        return f.getMonth() === mesActual && f.getFullYear() === añoActual;
+    });
+
+    // --- Generar la cuadrícula de días ---
+    const primerDia = new Date(añoActual, mesActual, 1);
+    const ultimoDia = new Date(añoActual, mesActual + 1, 0);
+    const diaSemanaInicio = primerDia.getDay(); // 0=domingo, 1=lunes...
+    const diasEnMes = ultimoDia.getDate();
+    const hoy = new Date();
+    const hoyStr = hoy.toDateString();
+
+    const nombresDias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+    // Cabecera de días de la semana
+    let htmlDias = '<div class="cal-grid-dias">';
+    nombresDias.forEach(n => {
+        htmlDias += `<div class="cal-dia-header">${n}</div>`;
+    });
+
+    // Celdas vacías antes del primer día
+    for (let i = 0; i < diaSemanaInicio; i++) {
+        htmlDias += '<div class="cal-dia cal-dia-vacio"></div>';
+    }
+
+    // Cada día del mes
+    for (let d = 1; d <= diasEnMes; d++) {
+        const fechaDia = new Date(añoActual, mesActual, d);
+        const eventosDelDia = eventosDelMes.filter(e => {
+            const f = new Date(e.fecha);
+            return f.getDate() === d && f.getMonth() === mesActual && f.getFullYear() === añoActual;
+        });
+        const esHoy = fechaDia.toDateString() === hoyStr;
+        const tieneEventos = eventosDelDia.length > 0;
+
+        let clases = 'cal-dia';
+        if (esHoy) clases += ' cal-hoy';
+        if (tieneEventos) clases += ' cal-con-evento';
+
+        htmlDias += `<div class="${clases}" data-dia="${d}" data-mes="${mesActual}" data-año="${añoActual}">`;
+        htmlDias += `<span class="cal-numero">${d}</span>`;
+
+        if (tieneEventos) {
+            // Mostrar hasta 3 burbujas y luego "+N"
+            const completadosDelDia = eventosDelDia.filter(e => eventosCompletados.has(getIdUnico(e)));
+            htmlDias += '<div class="cal-evento-burbujas">';
+            const maxBurbujas = 3;
+            const mostrar = eventosDelDia.slice(0, maxBurbujas);
+            mostrar.forEach(e => {
+                const estaCompletado = completadosDelDia.includes(e);
+                htmlDias += `<span class="cal-burbuja ${estaCompletado ? 'cal-completado' : ''}"></span>`;
+            });
+            if (eventosDelDia.length > maxBurbujas) {
+                htmlDias += `<span class="cal-mas">+${eventosDelDia.length - maxBurbujas}</span>`;
+            }
+            htmlDias += '</div>';
+        }
+
+        htmlDias += '</div>';
+    }
+
+    htmlDias += '</div>'; // .cal-grid-dias
+
+    const totalPendientes = eventosDelMes.filter(e => !eventosCompletados.has(getIdUnico(e))).length;
+
+    const htmlContenido = `
+    <div class="calendario-view fade-in">
+        <div class="card" style="margin-bottom:18px;">
             <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
                 <div>
                     <h3>Calendario de Monitoreo</h3>
-                    <p>Se muestran los horarios de medicación y citas programadas para tus pacientes.</p>
+                    <p>Horarios de medicación y citas programadas. Haz clic en un evento para ver detalle y marcar como completado.</p>
                 </div>
             </div>
         </div>
-        <div class="card fade-in">
-            <h4>Próximos eventos</h4>
-            <div class="registro-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-top: 12px; gap: 12px;">
-                ${eventosHtml}
+
+        <div class="card calendario-card">
+            <div class="cal-navegacion">
+                <button class="cal-btn-nav" id="cal-mes-ant"><i class="ti ti-chevron-left"></i></button>
+                <h4 class="cal-mes-titulo" style="text-transform:capitalize;">${mesNombre}</h4>
+                <button class="cal-btn-nav" id="cal-mes-sig"><i class="ti ti-chevron-right"></i></button>
+            </div>
+            ${htmlDias}
+        </div>
+
+        <div class="card" style="margin-top:18px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+                <h4 style="margin:0;">Eventos del mes</h4>
+                <span style="font-size:0.82rem; color:var(--text-muted); background:#f3f4f6; padding:4px 12px; border-radius:20px;">
+                    ${totalPendientes} pendientes
+                </span>
+            </div>
+            <div class="cal-lista-eventos">
+                ${eventosDelMes.length > 0 ? eventosDelMes.sort((a, b) => a.fecha - b.fecha).map(e => {
+                    const idUnico = getIdUnico(e);
+                    const completado = eventosCompletados.has(idUnico);
+                    return `<div class="cal-evento-item ${completado ? 'cal-evento-completado' : ''}" data-evento-id="${idUnico}" data-tipo="${e.tipo}" data-detalle="${e.detalle}" data-paciente="${e.paciente}" data-fecha="${e.fecha.toISOString()}" data-medicamento="${e.medicamento || ''}">
+                        <div class="cal-evento-icono">
+                            <i class="ti ti-${e.tipo === 'Cita' ? 'calendar-event' : 'pill'}"></i>
+                        </div>
+                        <div class="cal-evento-info">
+                            <strong>${e.paciente}</strong>
+                            <span>${e.tipo === 'Cita' ? 'Cita' : e.medicamento} · ${e.fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })} · ${e.fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>
+                            <small>${e.detalle}</small>
+                        </div>
+                        <span class="cal-evento-estado ${completado ? 'estado-completado' : 'estado-pendiente'}">${completado ? '✓ Completado' : '○ Pendiente'}</span>
+                    </div>`;
+                }).join('') : '<p style="color:var(--text-muted); padding:16px 0; text-align:center;">No hay eventos este mes.</p>'}
             </div>
         </div>
+    </div>
     `;
+
+    container.innerHTML = htmlContenido;
+
+    // Navegación
+    document.getElementById('cal-mes-ant')?.addEventListener('click', () => {
+        mesActual--;
+        if (mesActual < 0) { mesActual = 11; añoActual--; }
+        renderizarCalendario();
+    });
+    document.getElementById('cal-mes-sig')?.addEventListener('click', () => {
+        mesActual++;
+        if (mesActual > 11) { mesActual = 0; añoActual++; }
+        renderizarCalendario();
+    });
+
+    // Click en un día del calendario -> hacer scroll a los eventos de ese día
+    container.querySelectorAll('.cal-dia:not(.cal-dia-vacio)').forEach(dia => {
+        dia.addEventListener('click', () => {
+            const diaNum = dia.dataset.dia;
+            if (!diaNum) return;
+            // Scroll suave hacia la lista de eventos
+            const listaEventos = container.querySelector('.cal-lista-eventos');
+            if (listaEventos) {
+                listaEventos.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Resaltar visualmente los eventos de ese día
+                container.querySelectorAll('.cal-evento-item').forEach(item => {
+                    const fechaEvento = new Date(item.dataset.fecha);
+                    if (fechaEvento.getDate() === parseInt(diaNum) && fechaEvento.getMonth() === mesActual && fechaEvento.getFullYear() === añoActual) {
+                        item.style.boxShadow = '0 0 0 3px rgba(210,150,127,0.5)';
+                        item.style.borderColor = '#d2967f';
+                        setTimeout(() => {
+                            item.style.boxShadow = '';
+                            item.style.borderColor = '';
+                        }, 2000);
+                    }
+                });
+            }
+        });
+    });
+
+    // Click en evento
+    container.querySelectorAll('.cal-evento-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const idUnico = item.dataset.eventoId;
+            const tipo = item.dataset.tipo;
+            const paciente = item.dataset.paciente;
+            const detalle = item.dataset.detalle;
+            const fecha = new Date(item.dataset.fecha);
+            const medicamento = item.dataset.medicamento;
+            const completado = eventosCompletados.has(idUnico);
+
+            const fechaStr = fecha.toLocaleDateString('es-ES', {
+                weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
+            });
+            const horaStr = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+                        const modalHtml = `
+                <div class="card fade-in">
+                    <h3>${tipo === 'Cita' ? 'Cita médica' : 'Medicación'}</h3>
+                    <div class="registro-value" style="margin-bottom:8px;"><strong>Paciente</strong><span>${paciente}</span></div>
+                    <div class="registro-value" style="margin-bottom:8px;"><strong>Fecha</strong><span>${fechaStr}</span></div>
+                    <div class="registro-value" style="margin-bottom:8px;"><strong>Hora</strong><span>${horaStr}</span></div>
+                    ${tipo !== 'Cita' ? `<div class="registro-value" style="margin-bottom:8px;"><strong>Medicamento</strong><span>${medicamento}</span></div>` : ''}
+                    <div class="registro-value" style="margin-bottom:12px;"><strong>Detalle</strong><span>${detalle}</span></div>
+                    <div style="padding:14px 16px; border-radius:14px; background:${completado ? '#f0fdf4' : '#fefce8'}; border:1px solid ${completado ? '#bbf7d0' : '#fde68a'}; display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:1.2rem;">${completado ? '' : ''}</span>
+                        <div>
+                            <strong style="display:block; color:${completado ? '#166534' : '#92400e'};">${completado ? 'Completado' : 'Pendiente'}</strong>
+                            <span style="font-size:0.82rem; color:${completado ? '#15803d' : '#b45309'};">${completado ? 'Ya fue marcado como completado.' : 'Aún no completado.'}</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:12px; border-top:1px solid #eef1f0; padding-top:18px; margin-top:18px;">
+                        ${!completado ? `<button id="btn-marcar-completado" class="btn btn-primary" style="background:#16a34a; flex:1; padding:14px 20px;">
+                            <i class="ti ti-check" style="margin-right:8px;"></i>Marcar como completado
+                        </button>` : `<button disabled class="btn btn-secondary" style="flex:1; opacity:0.6; padding:14px 20px;">
+                            <i class="ti ti-check" style="margin-right:8px;"></i>Ya completado
+                        </button>`}
+                        <button id="btn-cerrar-modal-evento" class="btn btn-secondary" style="padding:14px 20px;">Cerrar</button>
+                    </div>
+                </div>
+            `;
+
+                        openFloatingModal(modalHtml);
+
+            document.getElementById('btn-marcar-completado')?.addEventListener('click', () => {
+                eventosCompletados.add(idUnico);
+                guardarCompletados();
+                closeFloatingModal();
+                renderizarCalendario();
+            });
+
+            document.getElementById('btn-cerrar-modal-evento')?.addEventListener('click', closeFloatingModal);
+        });
+    });
+    }
+
+    renderizarCalendario();
 }
 
 async function renderMedicamentosSection(container) {
@@ -1698,83 +1922,6 @@ function renderCrearPacienteForm(container, profesionales, emailCuidador) {
     });
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 async function renderPacienteDetalle(container, idPaciente, rol) {
     const paciente = await obtenerPacienteDetalle(idPaciente);
     if (!paciente) {
@@ -1874,39 +2021,36 @@ async function renderPacienteDetalle(container, idPaciente, rol) {
                 mensaje: `El cuidador solicita vincular al paciente "${paciente.nombre}" a su cuenta profesional.`
             };
 
-            const resp = await crearSolicitudVinculacion(solicitud);
+                        const resp = await crearSolicitudVinculacion(solicitud);
             if (resp.success) {
                 if (solicitudMsg) {
-                    solicitudMsg.textContent = '✅ Solicitud de vinculación enviada al médico. Debe aceptarla para completar la relación.';
+                    solicitudMsg.textContent = 'Solicitud de vinculacion enviada al medico. Debe aceptarla para completar la relacion.';
                     solicitudMsg.style.color = '#16a34a';
                     solicitudMsg.style.display = 'block';
                 }
+                btnSolicitar.disabled = true;
                 btnSolicitar.textContent = 'Solicitud enviada';
             } else {
                 if (solicitudMsg) {
-                    solicitudMsg.textContent = '❌ ' + (resp.message || 'No se pudo enviar la solicitud.');
+                    solicitudMsg.textContent = resp.message || 'Error al enviar la solicitud.';
                     solicitudMsg.style.color = '#ef4444';
                     solicitudMsg.style.display = 'block';
                 }
                 btnSolicitar.disabled = false;
-                btnSolicitar.textContent = 'Enviar solicitud de vinculación';
+                btnSolicitar.textContent = 'Enviar solicitud de vinculacion';
             }
         });
     }
 
-    document.getElementById('volver-paciente-lista')?.addEventListener('click', () => {
-        if (container.closest('#floating-modal-root')) {
-            closeFloatingModal();
-            return;
-        }
-        renderPacientesSection(container);
-    });
+    // Boton Volver
+    document.getElementById('volver-paciente-lista')?.addEventListener('click', closeFloatingModal);
 
+    // Submit del formulario de edicion
     const form = document.getElementById('editar-paciente-form');
     form?.addEventListener('submit', async (event) => {
         event.preventDefault();
         const formData = new FormData(form);
-                const datosActualizados = {
+        const datosActualizados = {
             nombre: String(formData.get('nombre') || '').trim(),
             fecha_nacimiento: String(formData.get('fecha_nacimiento') || '').trim(),
             direccion: String(formData.get('direccion') || '').trim(),
@@ -1933,8 +2077,14 @@ async function renderPacienteDetalle(container, idPaciente, rol) {
         }
 
         if (successDiv) {
-            successDiv.textContent = 'Paciente actualizado con éxito.';
+            successDiv.textContent = 'Paciente actualizado con exito.';
             successDiv.style.display = 'block';
         }
+
+        setTimeout(() => {
+            closeFloatingModal();
+            const pageContainer = document.getElementById('cuidador-content-area');
+            if (pageContainer) renderPacientesSection(pageContainer);
+        }, 800);
     });
 }

@@ -245,19 +245,23 @@ async function cargarDashboardConDatosReales() {
         if (heroTitle) heroTitle.textContent = `Seguimiento activo para ${pacientePrincipal.nombre || 'tu paciente'}`;
         if (heroDesc) heroDesc.textContent = 'Los pacientes relacionados con tu cuenta se muestran automáticamente desde la base de datos del backend.';
 
-        // Obtener datos agregados
+                // Obtener datos agregados (PARALELO)
         const todosLosRegistros = [];
         const todasLasCitas = [];
 
-        for (const p of pacientes) {
-            const meds = await obtenerMedicamentosPaciente(p.id);
-            totalMedicamentos += meds.length;
+        const resultadosPacientes = await Promise.all(pacientes.map(async (p) => {
+            const [meds, citas, registros] = await Promise.all([
+                obtenerMedicamentosPaciente(p.id),
+                obtenerCitasPaciente(p.id),
+                obtenerBitacoraRegistros(p.id)
+            ]);
+            return { p, meds, citas, registros };
+        }));
 
-            const citas = await obtenerCitasPaciente(p.id);
+        for (const { p, meds, citas, registros } of resultadosPacientes) {
+            totalMedicamentos += meds.length;
             todasLasCitas.push(...citas.map(c => ({ ...c, paciente: p.nombre, id_paciente: p.id })));
             totalCitas += citas.length;
-
-            const registros = await obtenerBitacoraRegistros(p.id);
             todosLosRegistros.push(...registros.map(r => ({ ...r, paciente: p.nombre })));
             totalRegistros += registros.length;
         }
@@ -368,8 +372,8 @@ async function renderChartBitacoraSimple(pacientes) {
     const conteo = {};
     for (const dia of dias) conteo[dia] = 0;
 
-    for (const p of pacientes) {
-        const registros = await obtenerBitacoraRegistros(p.id);
+        const todosRegistros = await Promise.all(pacientes.map(p => obtenerBitacoraRegistros(p.id)));
+    for (const registros of todosRegistros) {
         for (const r of registros) {
             const fechaReg = r.fecha_registro ? r.fecha_registro.split('T')[0] : '';
             if (conteo[fechaReg] !== undefined) conteo[fechaReg]++;
@@ -806,14 +810,18 @@ async function renderBitacoraSection(container) {
         return;
     }
 
-    const todosLosRegistros = [];
-    for (const p of pacientes) {
-        const registros = await obtenerBitacoraRegistros(p.id);
-        todosLosRegistros.push(...registros.map(r => ({ ...r, paciente_nombre: p.nombre, id_paciente: p.id })));
-    }
-    todosLosRegistros.sort((a, b) => new Date(b.fecha_registro) - new Date(a.fecha_registro));
-
-    const plantillas = await obtenerBitacoraPlantillas();
+        const [todosLosRegistros, plantillas] = await Promise.all([
+        (async () => {
+            const resultados = await Promise.all(pacientes.map(async (p) => {
+                const registros = await obtenerBitacoraRegistros(p.id);
+                return registros.map(r => ({ ...r, paciente_nombre: p.nombre, id_paciente: p.id }));
+            }));
+            const flat = resultados.flat();
+            flat.sort((a, b) => new Date(b.fecha_registro) - new Date(a.fecha_registro));
+            return flat;
+        })(),
+        obtenerBitacoraPlantillas()
+    ]);
 
     html += `
         <div class="section-grid">
