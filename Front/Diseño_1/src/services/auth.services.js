@@ -1,6 +1,6 @@
 // src/services/auth.services.js
 
-const API_URL = (typeof window !== 'undefined' && (window.__ZOE_API_URL__ || window.__API_URL__)) || 'http://127.0.0.1:3001/api';
+const API_URL = (typeof window !== 'undefined' && (window.__ZOE_API_URL__ || window.__API_URL__)) || 'https://proyecto-integrador-n2wa.onrender.com/api';
 
 export function estaAutenticado() {
     return Boolean(localStorage.getItem('authToken') && sessionStorage.getItem('user_session'));

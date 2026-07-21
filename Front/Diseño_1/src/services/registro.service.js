@@ -1,4 +1,4 @@
-const API_URL = 'http://127.0.0.1:3001/api';
+const API_URL = 'https://proyecto-integrador-n2wa.onrender.com/api';
 
 export async function registrarUsuarioEnBackend(nombre, email, password, rol) {
   const response = await fetch(`${API_URL}/auth/register`, {
